@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Metanet Desktop Wallet Test</title>
+  <style>
+    body { font-family: monospace; padding: 20px; max-width: 800px; margin: 0 auto; }
+    button { padding: 10px 20px; margin: 5px; font-size: 14px; cursor: pointer; }
+    .success { color: green; }
+    .error { color: red; }
+    pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+    h2 { margin-top: 30px; }
+  </style>
+</head>
+<body>
+  <h1>Metanet Desktop Wallet Connection Test</h1>
+  <p>Testing JSON-API on <code>http://localhost:3321</code></p>
+
+  <h2>1. Test Connection</h2>
+  <button onclick="testConnection()">Test getPublicKey</button>
+  <div id="connection-result"></div>
+
+  <h2>2. Test Permissions</h2>
+  <button onclick="testCreateAction()">Test createAction (minimal)</button>
+  <div id="action-result"></div>
+
+  <h2>3. Test with Origin Variations</h2>
+  <button onclick="testWithOrigin('http://localhost:5173')">Test with localhost:5173 origin</button>
+  <button onclick="testWithOrigin('http://localhost:3321')">Test with localhost:3321 origin</button>
+  <div id="origin-result"></div>
+
+  <script>
+    // Simple fetch-based wallet client test (no SDK import needed)
+    const WALLET_URL = 'http://localhost:3321';
+    
+    async function walletRequest(method, body) {
+      const response = await fetch(`${WALLET_URL}/${method}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Origin': window.location.origin
+        },
+        body: JSON.stringify(body)
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`${response.status}: ${text}`);
+      }
+      return response.json();
+    }
+    
+    window.testConnection = async function() {
+      const result = document.getElementById('connection-result');
+      result.innerHTML = '<p>Testing...</p>';
+      try {
+        const response = await walletRequest('getPublicKey', { identityKey: true });
+        result.innerHTML = `<p class="success">✅ Connected!</p><pre>${JSON.stringify(response, null, 2)}</pre>`;
+      } catch (error) {
+        result.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+      }
+    };
+
+    window.testCreateAction = async function() {
+      const result = document.getElementById('action-result');
+      result.innerHTML = '<p>Testing createAction (this will prompt for permission)...</p>';
+      try {
+        // Minimal createAction - just create a 1-sat output to self
+        const response = await walletRequest('createAction', {
+          description: 'Wallet Permission Test',
+          outputs: [{
+            satoshis: 1,
+            lockingScript: '006a', // OP_0 OP_RETURN (provably unspendable)
+            outputDescription: 'Test output'
+          }]
+        });
+        result.innerHTML = `<p class="success">✅ createAction succeeded!</p><pre>${JSON.stringify(response, null, 2)}</pre>`;
+      } catch (error) {
+        result.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+      }
+    };
+
+    window.testWithOrigin = async function(origin) {
+      const result = document.getElementById('origin-result');
+      result.innerHTML = `<p>Testing with Origin: ${origin}...</p>`;
+      try {
+        const response = await fetch('http://localhost:3321/getPublicKey', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Origin': origin
+          },
+          body: JSON.stringify({ identityKey: true })
+        });
+        const data = await response.json();
+        result.innerHTML = `<p class="success">✅ Response with origin ${origin}:</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+      } catch (error) {
+        result.innerHTML = `<p class="error">❌ Error with origin ${origin}: ${error.message}</p>`;
+      }
+    };
+
+    console.log('Wallet test page loaded');
+  </script>
+</body>
+</html>

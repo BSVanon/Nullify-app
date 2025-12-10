@@ -1,0 +1,162 @@
+import React, { useState } from 'react'
+
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { useNotification } from '@/contexts/NotificationContext.jsx'
+import { CONFIG } from '@/lib/config.js'
+import { sendDonationToHDBot } from '@/lib/wallet/sendSats.js'
+import { formatErrorForNotification } from '@/lib/errors/userFriendlyErrors.js'
+
+export default function DonateSection({ walletConnected }) {
+  const { addNotification } = useNotification()
+  const [amount, setAmount] = useState('1,000,000')
+  const [isSending, setIsSending] = useState(false)
+
+  const helperCacheEndpoint = CONFIG.HELPER_CACHE_ENDPOINT || ''
+  const hasDonationEndpoint = typeof helperCacheEndpoint === 'string' && helperCacheEndpoint.length > 0
+
+  const PRESET_AMOUNTS = [
+    { value: 10000, label: '10K sats' },
+    { value: 50000, label: '50K sats' },
+    { value: 100000, label: '100K sats' },
+  ]
+
+  const handleSend = async (overrideAmount = null) => {
+    if (!walletConnected) {
+      addNotification({
+        type: 'error',
+        message: 'Connect a BRC-100 compatible wallet to send a donation.',
+        duration: 6000,
+      })
+      return
+    }
+
+    if (!hasDonationEndpoint) {
+      addNotification({
+        type: 'error',
+        message: 'Donation server is not configured.',
+        duration: 6000,
+      })
+      return
+    }
+
+    const value = (() => {
+      if (overrideAmount !== null) return overrideAmount
+      const normalized = typeof amount === 'string' ? amount.replace(/,/g, '').trim() : amount
+      const numeric = Number(normalized)
+      return numeric
+    })()
+    if (!Number.isFinite(value) || !Number.isInteger(value) || value <= 0) {
+      addNotification({
+        type: 'error',
+        message: 'Amount must be a positive whole number of sats.',
+        duration: 5000,
+      })
+      return
+    }
+
+    setIsSending(true)
+    try {
+      addNotification({
+        type: 'success',
+        message: 'Bitcoin payment created. Your wallet will ask for confirmation.',
+        duration: 8000,
+      })
+
+      const result = await sendDonationToHDBot({
+        amountSats: value,
+        description: `NukeNote donation (${value.toLocaleString()} sats)`,
+      })
+      
+      addNotification({
+        type: 'success',
+        message: `Donation sent! Transaction: ${result.txid?.slice(0, 12)}...`,
+        duration: 8000,
+      })
+    } catch (error) {
+      console.error('[DonateSection] Failed to send donation', error)
+      addNotification({
+        type: 'error',
+        message: formatErrorForNotification(error, { context: 'send donation' }),
+        duration: 8000,
+      })
+    } finally {
+      setIsSending(false)
+    }
+  }
+
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Support NukeNote</CardTitle>
+        <CardDescription>
+          Send a Bitcoin donation to help cover development and infrastructure costs.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4 text-sm text-muted-foreground">
+        {!hasDonationEndpoint && (
+          <p className="text-xs text-amber-500">
+            Donation server is not configured. Set VITE_HELPER_CACHE_ENDPOINT in your environment to enable this.
+          </p>
+        )}
+
+        {hasDonationEndpoint && (
+          <p>
+            Each donation is sent to a newly generated address.
+          </p>
+        )}
+
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground/80">Quick amounts</p>
+          <div className="grid grid-cols-3 gap-2">
+            {PRESET_AMOUNTS.map((preset) => (
+              <Button
+                key={preset.value}
+                size="sm"
+                variant="outline"
+                onClick={() => handleSend(preset.value)}
+                disabled={isSending || !hasDonationEndpoint}
+                className="h-auto flex-col gap-0.5 py-2"
+              >
+                <span className="text-xs font-semibold">{preset.label}</span>
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground/80">Or enter a custom amount:</p>
+          <div className="flex items-center gap-2">
+            <Input
+              type="text"
+              value={amount}
+              onChange={(event) => {
+                const raw = event.target.value.replace(/,/g, '')
+                if (raw === '') {
+                  setAmount('')
+                  return
+                }
+                const numeric = Number(raw)
+                if (!Number.isFinite(numeric) || numeric < 0) {
+                  return
+                }
+                setAmount(numeric.toLocaleString('en-US'))
+              }}
+              className="w-32"
+              placeholder="1,000,000"
+              disabled={isSending}
+            />
+            <span className="text-xs text-muted-foreground/80">sats</span>
+            <Button size="sm" onClick={() => handleSend()} disabled={isSending || !hasDonationEndpoint}>
+              {isSending ? 'Sending…' : 'Send donation'}
+            </Button>
+          </div>
+        </div>
+
+        {hasDonationEndpoint && null}
+      </CardContent>
+    </Card>
+  )
+}

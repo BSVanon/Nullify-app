@@ -1,0 +1,47 @@
+{
+  "short_name": "Nullify",
+  "name": "Nullify Secure Messaging",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#1a1a2e",
+  "background_color": "#0f0f1a",
+  "icons": [
+    {
+      "src": "/Nullify_light.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/Nullify_dark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "babbage": {
+    "groupPermissions": {
+      "protocolPermissions": [
+        {
+          "protocolID": [2, "NukeNote Thread CT"],
+          "counterparty": "self",
+          "description": "Create and burn secure messaging threads"
+        },
+        {
+          "protocolID": [2, "NukeNote DT"],
+          "counterparty": "self",
+          "description": "Issue access tokens for thread participants"
+        },
+        {
+          "protocolID": [2, "NukeNote Overlay"],
+          "counterparty": "self",
+          "description": "Sign messages for relay authentication"
+        },
+        {
+          "protocolID": [2, "nukenote backup"],
+          "counterparty": "self",
+          "description": "Derive keys for encrypted backup storage"
+        }
+      ],
+      "basketAccess": ["wallet settings"]
+    }
+  }
+}
