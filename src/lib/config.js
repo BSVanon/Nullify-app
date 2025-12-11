@@ -1,4 +1,4 @@
-// Configuration constants for NukeNote
+// Configuration constants for Nullify
 // Canonical palette: Tailwind only — do not introduce ad-hoc hex codes in app logic.
 
 // Vite exposes env vars via import.meta.env (prefixed with VITE_)
@@ -105,7 +105,7 @@ export const validateConfig = () => {
 
 // Debug helper: expose config to browser console for troubleshooting
 if (typeof window !== 'undefined' && import.meta?.env?.DEV) {
-  window.__NUKENOTE_CONFIG_DEBUG__ = {
+  window.__NULLIFY_CONFIG_DEBUG__ = {
     OVERLAY_ENDPOINT: CONFIG.OVERLAY_ENDPOINT,
     HELPER_CACHE_ENDPOINT: CONFIG.HELPER_CACHE_ENDPOINT,
     REMOTE_MESSAGING_API_URL: CONFIG.REMOTE_MESSAGING_API_URL,

@@ -13,7 +13,7 @@ export async function mintDataTokens({
   ctVout = 0,
   recipients,
   permissions = 'read-only',
-  description = 'Mint NukeNote DTs',
+  description = 'Authorize access to the new Nullify Thread',
   fundingUtxos = [],
   rawKeyBase64
 }) {
@@ -75,7 +75,7 @@ export async function mintDataTokens({
     outputs.push({
       satoshis: 1,
       lockingScript: lockingScriptHex,
-      outputDescription: `NukeNote DT for ${recipient.slice(0, 8)}...`
+      outputDescription: `Authorize Nullify Thread access for ${recipient.slice(0, 8)}...`
     });
     lockingScriptHexes.push(lockingScriptHexNormalized);
     broadcastOutputs.push({

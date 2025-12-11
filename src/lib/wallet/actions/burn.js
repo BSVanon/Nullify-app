@@ -10,7 +10,7 @@ import { buildDonationOutput, clearInvoiceCache } from '../donationFee.js';
 export async function burnControlToken({
   ctTxid,
   ctVout = 0,
-  description = 'Burn NukeNote CT',
+  description = 'Permanently destroy the Nullify Thread',
   fundingUtxos = [],
   broadcast = null,
   artifacts: artifactsOverride = null

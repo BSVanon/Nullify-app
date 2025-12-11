@@ -96,7 +96,7 @@ describe('burnControlToken', () => {
 
     expect(mockClient.createAction).toHaveBeenCalledWith(
       expect.objectContaining({
-        description: 'Burn NukeNote CT',
+        description: 'Permanently destroy the Nullify Thread',
         inputs: expect.arrayContaining([
           expect.objectContaining({
             txid: validTxid,

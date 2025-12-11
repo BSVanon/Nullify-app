@@ -1,9 +1,9 @@
 /**
- * Encryption utilities for NukeNote
+ * Encryption utilities for Nullify
  * Handles AES-256-GCM encryption/decryption of files
  */
 
-export class NukeNoteEncryption {
+export class NullifyEncryption {
   constructor() {
     this.algorithm = 'AES-GCM'
     this.keyLength = 256
@@ -136,7 +136,7 @@ export class NukeNoteEncryption {
   }
 
   /**
-   * Encrypt and prepare file for NukeNote
+   * Encrypt and prepare file for Nullify
    */
   async prepareFile(file) {
     try {
@@ -166,9 +166,9 @@ export class NukeNoteEncryption {
   }
 
   /**
-   * Decrypt file using NukeNote data
+   * Decrypt file using Nullify data
    */
-  async decryptNukeNoteFile(encryptedData, encryptionKey) {
+  async decryptNullifyFile(encryptedData, encryptionKey) {
     try {
       // Import the encryption key
       const key = await this.importKey(encryptionKey)
@@ -178,7 +178,7 @@ export class NukeNoteEncryption {
 
       return decryptedData
     } catch (error) {
-      throw new Error(`NukeNote file decryption failed: ${error.message}`)
+      throw new Error(`Nullify file decryption failed: ${error.message}`)
     }
   }
 }
@@ -186,7 +186,7 @@ export class NukeNoteEncryption {
 /**
  * Storage utilities for encrypted files
  */
-export class NukeNoteStorage {
+export class NullifyStorage {
   constructor(storageProvider = 'ipfs') {
     this.storageProvider = storageProvider
   }
@@ -268,6 +268,6 @@ export class NukeNoteStorage {
 }
 
 export default {
-  NukeNoteEncryption,
-  NukeNoteStorage
+  NullifyEncryption,
+  NullifyStorage
 }

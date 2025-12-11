@@ -150,7 +150,7 @@ function TestApp() {
     },
       React.createElement('h1', { 
         style: { margin: '0', fontSize: '2.5em' } 
-      }, 'NukeNote'),
+      }, 'Nullify'),
       React.createElement('p', { 
         style: { margin: '10px 0 0 0', fontSize: '1.1em' }
       }, 'Self-destructing access tokens on BSV blockchain')

@@ -17,7 +17,7 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('nukenote.theme');
+      const stored = localStorage.getItem('nullify.theme');
       let initialTheme = 'dark';
       if (stored === 'dark' || stored === 'light' || stored === 'system') {
         initialTheme = stored;
@@ -32,7 +32,7 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     try {
-      const storedScale = localStorage.getItem('nukenote.textScale');
+      const storedScale = localStorage.getItem('nullify.textScale');
       if (storedScale === 'sm' || storedScale === 'md' || storedScale === 'lg') {
         setTextScale(storedScale);
       }
@@ -49,7 +49,7 @@ export function ThemeProvider({ children }) {
         effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       }
       if (effectiveTheme === 'dark') root.classList.add('dark'); else root.classList.remove('dark');
-      localStorage.setItem('nukenote.theme', theme);
+      localStorage.setItem('nullify.theme', theme);
     } catch (err) {
       console.warn('Failed to persist theme preference', err);
     }
@@ -57,7 +57,7 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     try {
-      localStorage.setItem('nukenote.textScale', textScale);
+      localStorage.setItem('nullify.textScale', textScale);
     } catch (err) {
       console.warn('Failed to persist text scale preference', err);
     }

@@ -27,7 +27,7 @@ export async function sendInviteToContact({
         recipientPubKey: contactPubkey,
         threadId: inviteDialogThread,
         inviteUrl: inviteLink,
-        senderName: 'NukeNote User', // TODO: use actual profile name
+        senderName: 'Nullify User', // TODO: use actual profile name
       })
 
       if (result.success) {

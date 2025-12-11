@@ -7,7 +7,7 @@ export async function mintAtomicCTandDTs({
   hintURL = '',
   recipients,
   permissions = 'read-only',
-  description = 'Mint NukeNote CT+DTs (atomic)',
+  description = 'Create a new Nullify Thread and authorize access',
   fundingUtxos = []
 }) {
   if (!/^[0-9a-fA-F]{64}$/.test(blobHash || '')) throw new Error('blobHash must be 64-hex');
@@ -35,7 +35,7 @@ export async function mintAtomicCTandDTs({
   outputs.push({
     satoshis: 1,
     lockingScript: ctScript.toHex(),
-    outputDescription: 'NukeNote CT (atomic)'
+    outputDescription: 'File sharing control (Nullify)'
   });
 
   // CT vout depends on whether donation output is present (donation at 0, CT at 1)
@@ -60,7 +60,7 @@ export async function mintAtomicCTandDTs({
     outputs.push({
       satoshis: 1,
       lockingScript: dtScript.toHex(),
-      outputDescription: `NukeNote DT for ${recipient.slice(0, 8)}...`
+      outputDescription: `Authorize Nullify Thread access for ${recipient.slice(0, 8)}...`
     });
   }
 

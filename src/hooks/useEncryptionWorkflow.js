@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { NukeNoteEncryption } from '../lib/encryption.js'
+import { NullifyEncryption } from '../lib/encryption.js'
 import { wrapEncryptionKey } from '../lib/wallet/actions.js'
 
 function toBase64(bytesLike) {
@@ -42,7 +42,7 @@ export function useEncryptionWorkflow({
 
   useEffect(() => {
     if (!encryptionHelperRef.current) {
-      encryptionHelperRef.current = new NukeNoteEncryption()
+      encryptionHelperRef.current = new NullifyEncryption()
     }
   }, [])
 
@@ -88,7 +88,7 @@ export function useEncryptionWorkflow({
       return
     }
 
-    const helper = encryptionHelperRef.current || new NukeNoteEncryption()
+    const helper = encryptionHelperRef.current || new NullifyEncryption()
     encryptionHelperRef.current = helper
 
     setEncryptionState(prev => ({ ...prev, status: 'processing', error: null }))

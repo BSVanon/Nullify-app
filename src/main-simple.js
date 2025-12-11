@@ -13,7 +13,7 @@ function App() {
   },
     React.createElement('h1', { 
       style: { color: '#FF007A' } 
-    }, 'NukeNote'),
+    }, 'Nullify'),
     React.createElement('p', null, 'React is working! ES6 modules work!'),
     React.createElement('div', { 
       style: { 

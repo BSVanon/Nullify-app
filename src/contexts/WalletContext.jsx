@@ -142,9 +142,9 @@ export function WalletProvider({ children }) {
   const disconnectWallet = useCallback(async () => {
     try {
       // Stop PeerPay polling if active
-      if (typeof window !== 'undefined' && window.__NUKENOTE_PEERPAY_POLL_INTERVAL__) {
-        clearInterval(window.__NUKENOTE_PEERPAY_POLL_INTERVAL__)
-        window.__NUKENOTE_PEERPAY_POLL_INTERVAL__ = null
+      if (typeof window !== 'undefined' && window.__NULLIFY_PEERPAY_POLL_INTERVAL__) {
+        clearInterval(window.__NULLIFY_PEERPAY_POLL_INTERVAL__)
+        window.__NULLIFY_PEERPAY_POLL_INTERVAL__ = null
         console.log('[WalletContext] Stopped PeerPay polling')
       }
 

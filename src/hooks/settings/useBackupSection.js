@@ -183,7 +183,7 @@ export function useBackupSection() {
 
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
       const timestamp = (result.createdAt || new Date().toISOString()).replace(/[:.]/g, '').replace(/Z$/, '')
-      const filename = `nukenote-backup-${timestamp}.json`
+      const filename = `nullify-backup-${timestamp}.json`
 
       const url = URL.createObjectURL(blob)
       const anchor = document.createElement('a')

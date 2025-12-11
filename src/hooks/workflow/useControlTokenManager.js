@@ -94,7 +94,7 @@ export default function useControlTokenManager({
         blobHash: ctBlobHash,
         encKeyWrap: ctEncKeyWrapped,
         hintURL: ctHintURL ? ctHintURL.trim() : '',
-        description: 'Mint NukeNote Control Token'
+        description: 'Mint Nullify Control Token'
       })
 
       if (!result?.txid) {

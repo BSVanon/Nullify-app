@@ -114,7 +114,7 @@ export function useSimplifiedCTFlow() {
     
     if (!fileHash || !wrappedKey || !storageUrl) {
       addNotification({
-        message: 'Missing required fields for CT creation',
+        message: 'Missing required information to create a new Nullify Thread',
         type: 'error'
       })
       return { success: false }
@@ -127,7 +127,7 @@ export function useSimplifiedCTFlow() {
         blobHash: fileHash,
         encKeyWrap: wrappedKey,
         hintURL: storageUrl,
-        description: `NukeNote CT for ${flowState.file?.name || 'file'}`
+        description: `Create a new Nullify Thread for ${flowState.file?.name || 'file'}`
       })
       
       if (result?.txid) {
@@ -138,7 +138,7 @@ export function useSimplifiedCTFlow() {
         }))
         
         addNotification({
-          message: `✅ Control Token created: ${result.txid}`,
+          message: `✅ New Nullify Thread created: ${result.txid}`,
           type: 'success',
           duration: 5000
         })
@@ -150,7 +150,7 @@ export function useSimplifiedCTFlow() {
       
     } catch (error) {
       addNotification({
-        message: `CT creation failed: ${error.message}`,
+        message: `Nullify Thread creation failed: ${error.message}`,
         type: 'error',
         duration: 5000
       })
@@ -166,7 +166,7 @@ export function useSimplifiedCTFlow() {
     
     if (!ctTxid) {
       addNotification({
-        message: 'Create Control Token first',
+        message: 'Create a new Nullify Thread first',
         type: 'warning'
       })
       return { success: false }
@@ -189,7 +189,7 @@ export function useSimplifiedCTFlow() {
         ctVout,
         recipients: validation.recipients.map(r => r.value),
         permissions: 'read-only',
-        description: `NukeNote DTs for ${flowState.file?.name || 'file'}`
+        description: `Authorize Nullify Thread access for ${flowState.file?.name || 'file'}`
       })
       
       if (result?.txid) {
@@ -210,7 +210,7 @@ export function useSimplifiedCTFlow() {
       
     } catch (error) {
       addNotification({
-        message: `DT creation failed: ${error.message}`,
+        message: `Thread access authorization failed: ${error.message}`,
         type: 'error',
         duration: 5000
       })

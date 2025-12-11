@@ -6,7 +6,7 @@ import {
 import { mapLockingScriptsToIndexes } from '../transactionOutputs.js';
 import { buildDonationOutput, clearInvoiceCache } from '../donationFee.js';
 
-export async function mintControlToken({ blobHash, encKeyWrap, hintURL, description = 'Mint NukeNote CT', fundingUtxos = [] }) {
+export async function mintControlToken({ blobHash, encKeyWrap, hintURL, description = 'Create a new Nullify Thread', fundingUtxos = [] }) {
   if (!/^[0-9a-fA-F]{64}$/.test(blobHash || '')) throw new Error('blobHash must be 64-hex');
   if (!encKeyWrap || typeof encKeyWrap !== 'string') throw new Error('encKeyWrap required');
 
@@ -47,7 +47,7 @@ export async function mintControlToken({ blobHash, encKeyWrap, hintURL, descript
 
   const lockingScriptHex = lockingScript.toHex();
   const outputs = [
-    { satoshis: 1, lockingScript: lockingScriptHex, outputDescription: 'NukeNote CT (PushDrop)' }
+    { satoshis: 1, lockingScript: lockingScriptHex, outputDescription: 'File sharing control (Nullify)' }
   ];
 
   // Donation output at index 0 - server monitors HD-derived address for payment

@@ -77,7 +77,7 @@ export async function mintThreadControlToken({
     {
       satoshis: 1,
       lockingScript: lockingScriptHex,
-      outputDescription: 'NukeNote Thread CT',
+      outputDescription: 'Conversation control (Nullify)',
     },
   ];
 
@@ -86,7 +86,7 @@ export async function mintThreadControlToken({
   const actionOutputs = donationOutput ? [donationOutput, ...outputs] : outputs;
 
   const response = await client.createAction({
-    description: 'Mint NukeNote Thread CT',
+    description: 'Create a new Nullify Thread',
     outputs: actionOutputs,
     options: { randomizeOutputs: false }  // Preserve output order for BRC-29 payment tracking
   });
@@ -148,7 +148,7 @@ export async function burnThreadControlToken({
     ctVout,
     broadcast,
     artifacts,
-    description: 'Burn NukeNote Thread CT',
+    description: 'Permanently destroy the Nullify Thread',
   });
 
   return {

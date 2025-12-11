@@ -125,7 +125,7 @@ export async function sendSatsToAddress({ address, amountSats, description }) {
     },
   ]
 
-  const actionDescription = description || 'Send sats (address) via NukeNote debug helper'
+  const actionDescription = description || 'Send sats (address) via Nullify debug helper'
 
   const response = await client.createAction({
     description: actionDescription,
@@ -349,7 +349,7 @@ export async function startPeerPayAutoAccept({ onPaymentAccepted } = {}) {
 
     // Store the interval ID so it can be cleared later if needed
     if (typeof window !== 'undefined') {
-      window.__NUKENOTE_PEERPAY_POLL_INTERVAL__ = pollInterval
+      window.__NULLIFY_PEERPAY_POLL_INTERVAL__ = pollInterval
     }
 
     return peerPay
@@ -362,12 +362,12 @@ export async function startPeerPayAutoAccept({ onPaymentAccepted } = {}) {
 
 // Dev-only helper: expose a tiny sats send to Bob's legacy address for manual testing.
 // Usage in browser console (with Alice's wallet connected):
-//   await window.__NUKENOTE_DEBUG__.sendTinySatsToBob(50)
-if (typeof window !== 'undefined' && import.meta?.env?.DEV) {
-  window.__NUKENOTE_DEBUG__ = window.__NUKENOTE_DEBUG__ || {}
+//   await window.__NULLIFY_DEBUG__.sendTinySatsToBob(50)
+if (typeof window !== 'undefined') {
+  window.__NULLIFY_DEBUG__ = window.__NULLIFY_DEBUG__ || {}
 
-  if (typeof window.__NUKENOTE_DEBUG__.sendTinySatsToBob !== 'function') {
-    window.__NUKENOTE_DEBUG__.sendTinySatsToBob = async (amountSats = 50) => {
+  if (typeof window.__NULLIFY_DEBUG__.sendTinySatsToBob !== 'function') {
+    window.__NULLIFY_DEBUG__.sendTinySatsToBob = async (amountSats = 50) => {
       const targetAddress = '1KAvfC7jEGFaPYcdDMgGW4atBeWqrJP3QD'
 
       console.log('[Nullify debug] Sending tiny sats to Bob via wallet.createAction', {
@@ -390,8 +390,8 @@ if (typeof window !== 'undefined' && import.meta?.env?.DEV) {
     }
   }
 
-  if (typeof window.__NUKENOTE_DEBUG__.startPeerPayListener !== 'function') {
-    window.__NUKENOTE_DEBUG__.startPeerPayListener = async () => {
+  if (typeof window.__NULLIFY_DEBUG__.startPeerPayListener !== 'function') {
+    window.__NULLIFY_DEBUG__.startPeerPayListener = async () => {
       console.log('[Nullify debug] Starting PeerPay auto-accept listener via debug helper...')
       return startPeerPayAutoAccept()
     }

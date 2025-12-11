@@ -2,7 +2,7 @@
  * Token redemption utilities (CT verification + DT decryption)
  */
 
-import { NukeNoteEncryption } from '../encryption.js'
+import { NullifyEncryption } from '../encryption.js'
 import { unwrapKeyWithECIES } from '../crypto/keyWrapping.js'
 
 const BURNED_FLAGS = ['spent', 'spentTxId', 'spentTxid', 'spentTransactionId']
@@ -325,7 +325,7 @@ export async function redeemDataToken({
 
   const rawKey = await unwrapKeyWithECIES(wrappedKey, identityPrivateKey)
 
-  const encryption = new NukeNoteEncryption()
+  const encryption = new NullifyEncryption()
   const cryptoKey = await encryption.importKey(rawKey)
 
   const encryptedUrl = storageUrlOverride || ctPayload.u || ctPayload.hintURL

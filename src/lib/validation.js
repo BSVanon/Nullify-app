@@ -1,5 +1,5 @@
 /**
- * Validation utilities for NukeNote inputs
+ * Validation utilities for Nullify inputs
  */
 
 /**

@@ -6,7 +6,7 @@ module.exports = ({ config, hostname, getIdentityKey }) => {
   router.get('/health', (req, res) => {
     res.json({
       status: 'ok',
-      message: 'NukeNote server is running',
+      message: 'Nullify server is running',
       timestamp: new Date().toISOString(),
       network: config.network || 'main',
       hostname,
