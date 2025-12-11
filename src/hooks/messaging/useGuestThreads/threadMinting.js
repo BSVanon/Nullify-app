@@ -87,6 +87,7 @@ export async function mintThreadCT(
         ctVout: ctResult.vout,
         recipientPubkeys: recipients,
         threadKeyBase64: rawKeyBase64,
+        description: 'Authorize my own access to the new Nullify Thread',
       });
 
       dtIssuance = {
@@ -288,6 +289,7 @@ export async function mintGuestDTForThread(
     ctVout,
     recipientPubkeys: [guestPublicKey],
     threadKeyBase64: rawKeyBase64,
+    description: 'Authorize an invitation to the new Nullify Thread',
   });
 
   const dtIssuance = {

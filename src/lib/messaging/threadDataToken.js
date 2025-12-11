@@ -32,6 +32,7 @@ export async function mintThreadDataTokens({
   recipientPubkeys,
   threadKeyBase64,
   permissions = 'read-only',
+  description,
 }) {
   if (!/^[0-9a-fA-F]{64}$/.test(ctTxid || '')) {
     throw new Error('ctTxid must be 64-hex');
@@ -52,6 +53,7 @@ export async function mintThreadDataTokens({
     recipients: recipientPubkeys,
     permissions,
     rawKeyBase64: threadKeyBase64,
+    description,
   });
 
   const outputs = dtOutpoints.map(({ recipient, vout }) => ({
