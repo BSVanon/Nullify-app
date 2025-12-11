@@ -22,7 +22,7 @@ const debugLog = (...args) => {
  * @param {string} [memo] - Optional memo for the invoice
  * @returns {Promise<{address: string, invoiceId: string}|null>} Invoice details or null on failure
  */
-async function fetchInvoiceAddress(satoshis, memo = 'NukeNote fee') {
+async function fetchInvoiceAddress(satoshis, memo = 'Nullify fee') {
   const helperCacheEndpoint = CONFIG.HELPER_CACHE_ENDPOINT || ''
   
   if (!helperCacheEndpoint) {
@@ -104,7 +104,7 @@ export async function buildDonationOutput(satoshis = 50) {
     return {
       satoshis,
       lockingScript: lockingScript.toHex(),
-      outputDescription: 'NukeNote fee',
+      outputDescription: 'Nullify fee',
       invoiceId: invoice.invoiceId, // Include for tracking
     }
   } catch (error) {

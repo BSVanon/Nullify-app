@@ -19,7 +19,7 @@ export default function LocalBackupSection() {
       const payload = await buildLocalBackupPayload()
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
-      const filename = `nukenote-local-backup-${timestamp}.json`
+      const filename = `nullify-local-backup-${timestamp}.json`
 
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -90,7 +90,7 @@ export default function LocalBackupSection() {
       console.error('[LocalBackupSection] Import failed', error)
       addNotification({
         type: 'error',
-        message: error?.message || 'Failed to import backup. Make sure the file is a valid NukeNote backup.',
+        message: error?.message || 'Failed to import backup. Make sure the file is a valid Nullify backup.',
         duration: 8000,
       })
     } finally {

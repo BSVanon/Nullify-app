@@ -15,7 +15,7 @@ class BRC7WalletHeadless {
       const response = await fetch(`${this.baseUrl}/api/health`).catch(() => null)
       
       if (!response || !response.ok) {
-        throw new Error('NukeNote server not available')
+        throw new Error('Nullify server not available')
       }
       
       const health = await response.json().catch(() => ({}))
@@ -87,7 +87,7 @@ class BRC7WalletHeadless {
     const sdk = await import('/node_modules/@bsv/sdk/dist/esm/mod.js')
     
     const outputs = params.outputs || []
-    const description = params.description || 'NukeNote action'
+    const description = params.description || 'Nullify action'
     
     // Fetch UTXOs for funding
     const utxoResp = await this.fetchUtxos(address)

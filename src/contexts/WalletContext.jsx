@@ -7,7 +7,7 @@ import { useNotification } from './NotificationContext.jsx'
 const WalletContext = createContext()
 
 // Persistence key for auto-reconnect
-const WALLET_TYPE_KEY = 'nukenote:wallet-type'
+const WALLET_TYPE_KEY = 'nullify:wallet-type'
 
 export function WalletProvider({ children }) {
   const [isConnected, setIsConnected] = useState(false)
@@ -56,16 +56,11 @@ export function WalletProvider({ children }) {
     if (storedWalletType) {
       console.log('[WalletContext] Auto-reconnecting to', storedWalletType, 'wallet...')
       // Don't set isLoading - this is a silent background reconnect
+      // BRC-73 permissions already granted from previous session - no new popups needed
       walletBootstrap.initialize(storedWalletType)
         .then(async (result) => {
-          // Verify wallet is reachable
-          try {
-            await result.wallet.getPublicKey({ identityKey: true })
-          } catch (probeError) {
-            console.warn('[WalletContext] Auto-reconnect probe failed:', probeError.message)
-            return // Don't update state if wallet isn't actually reachable
-          }
-
+          // Wallet already verified during bootstrap (waitForAuthentication + getPublicKey)
+          // No additional probe needed - permissions persist across sessions
           setIsConnected(true)
           setWalletType(result.walletType)
           setIdentityKey(result.identityKey)
@@ -73,7 +68,7 @@ export function WalletProvider({ children }) {
           setVersion(result.version || null)
           checkCapabilities()
 
-          // Warm up wallet silently
+          // Warm up wallet silently (UTXO cache only, no permission popups)
           getWallet({ autoConnect: false }).catch(() => {})
 
           console.log('[WalletContext] Auto-reconnect successful')
@@ -93,15 +88,9 @@ export function WalletProvider({ children }) {
       const result = await walletBootstrap.initialize(type)
       console.log('[WalletContext] wallet initialized:', result)
 
-      // Probe wallet to verify it's actually reachable
-      try {
-        console.log('[WalletContext] Probing wallet with getPublicKey...')
-        const pk = await result.wallet.getPublicKey({ identityKey: true })
-        console.log('✅ Wallet alive and reachable:', pk)
-      } catch (probeError) {
-        console.error('❌ Wallet transport selected but not reachable:', probeError)
-        throw new Error(`Wallet ${result.walletType} selected but not reachable: ${probeError.message}`)
-      }
+      // Wallet already verified during bootstrap (waitForAuthentication + getPublicKey)
+      // No need for additional probe - permissions already granted via BRC-73 grouped request
+      console.log('✅ Wallet connected and authenticated:', result.identityKey)
 
       setIsConnected(true)
       setWalletType(result.walletType)

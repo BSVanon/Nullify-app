@@ -159,7 +159,7 @@ export async function collectTransactionArtifacts(response) {
   }
 }
 
-const TX_STORAGE_PREFIX = 'nukenote.tx.'
+const TX_STORAGE_PREFIX = 'nullify.tx.'
 
 export function persistTransactionArtifactsToStorage(txid, artifacts) {
   if (!txid || !artifacts || typeof window === 'undefined') return

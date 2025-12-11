@@ -11,7 +11,7 @@ export default function WorkflowPage() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-8 py-10">
       <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">NukeNote Messaging</h1>
+        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Nullify Messaging</h1>
         <p className="text-muted-foreground">
           The legacy on-chain access-token stepper has been retired. Threads now start from guest invites and enroll directly into the messaging surface.
         </p>

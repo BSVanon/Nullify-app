@@ -8,7 +8,7 @@
 import localforage from 'localforage'
 import { safetyNumber } from './safetyNumber.js'
 
-const CONTACTS_KEY = 'nukenote:contacts'
+const CONTACTS_KEY = 'nullify:contacts'
 
 // In-memory cache
 let contactsCache = null

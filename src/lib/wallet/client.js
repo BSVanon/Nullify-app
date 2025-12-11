@@ -10,9 +10,10 @@ const debugLog = (...args) => {
 };
 
 /**
- * Warm up the wallet by making calls that ensure it's fully ready for spending.
- * This prevents first-call failures where the wallet appears connected but
- * has stale UTXO data that causes createAction to fail.
+ * Warm up the wallet by syncing UTXO cache.
+ * 
+ * NOTE: Basic connectivity is already verified during bootstrap via BRC-73 
+ * waitForAuthentication + getPublicKey. This warmup only refreshes UTXO cache.
  * 
  * The key insight: Metanet Desktop caches UTXOs locally. If the wallet was used
  * elsewhere or UTXOs were spent, the cache can be stale. Calling listActions
@@ -24,14 +25,8 @@ async function warmupWallet(wallet) {
   const start = Date.now();
   
   try {
-    // Step 1: Verify basic connectivity
-    debugLog('[getWallet] Warming up wallet with getPublicKey probe...');
-    await wallet.getPublicKey({ identityKey: true });
-    debugLog('[getWallet] Wallet connectivity verified in', Date.now() - start, 'ms');
-    
-    // Step 2: Force UTXO cache refresh by calling listActions
-    // This makes Metanet Desktop sync its internal UTXO set with the blockchain,
-    // preventing "txid must be valid transaction on chain" errors on first createAction.
+    // Skip getPublicKey probe - already done during bootstrap with BRC-73 grouped permissions
+    // Only refresh UTXO cache to prevent stale spending errors
     if (typeof wallet.listActions === 'function') {
       debugLog('[getWallet] Refreshing wallet UTXO cache via listActions...');
       try {
@@ -46,7 +41,7 @@ async function warmupWallet(wallet) {
     walletWarmedUp = true;
     debugLog('[getWallet] Wallet warmup complete in', Date.now() - start, 'ms');
   } catch (err) {
-    console.warn('[getWallet] Wallet warmup probe failed:', err.message);
+    console.warn('[getWallet] Wallet warmup failed:', err.message);
     // Don't throw - let the actual operation fail with a better error
   }
 }

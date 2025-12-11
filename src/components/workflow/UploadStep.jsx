@@ -24,8 +24,8 @@ function UploadStep({
       <CardHeader className="space-y-3 text-center">
         <CardTitle className="text-3xl">Create self-destructing access token</CardTitle>
         <CardDescription className="mx-auto max-w-2xl text-base leading-relaxed">
-          Upload a file to create a NukeNote—a self-destructing access token that lets recipients decrypt your content until you burn the
-          control token.
+          Upload a file to create a self-destructing access token that lets recipients decrypt your content until you burn the control
+          token.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

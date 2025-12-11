@@ -1,6 +1,6 @@
 import { CONFIG } from '@/lib/config'
 
-const STORAGE_KEY = 'nukenote:remote-sync-enabled'
+const STORAGE_KEY = 'nullify:remote-sync-enabled'
 let memoryOverride = null
 const listeners = new Set()
 

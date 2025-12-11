@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 
-const DRAFT_STORAGE_KEY = 'nukenote.draft'
+const DRAFT_STORAGE_KEY = 'nullify.draft'
 
 export function useWorkflowDraftPersistence({
   draftState,

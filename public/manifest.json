@@ -23,25 +23,35 @@
         {
           "protocolID": [2, "NukeNote Thread CT"],
           "counterparty": "self",
-          "description": "Create and burn secure messaging threads"
+          "description": "Create and manage secure conversations"
+        },
+        {
+          "protocolID": [2, "NukeNote CT"],
+          "counterparty": "self",
+          "description": "Manage conversation ownership"
         },
         {
           "protocolID": [2, "NukeNote DT"],
           "counterparty": "self",
-          "description": "Issue access tokens for thread participants"
+          "description": "Invite participants to conversations"
         },
         {
           "protocolID": [2, "NukeNote Overlay"],
           "counterparty": "self",
-          "description": "Sign messages for relay authentication"
+          "description": "Authenticate with messaging servers"
         },
         {
           "protocolID": [2, "nukenote backup"],
           "counterparty": "self",
-          "description": "Derive keys for encrypted backup storage"
+          "description": "Encrypt and restore your message backups"
         }
       ],
-      "basketAccess": ["wallet settings"]
+      "basketAccess": [
+        {
+          "basket": "wallet settings",
+          "description": "Store your app preferences"
+        }
+      ]
     }
   }
 }

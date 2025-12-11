@@ -26,7 +26,7 @@ function WalletConnectionCard({
             <CardDescription>
               {isConnected
                 ? `Connected via ${walletType?.toUpperCase?.() || 'wallet'}`
-                : 'Connect your BSV wallet to create NukeNotes.'}
+                : 'Connect your BSV wallet to create Nullify conversations and access tokens.'}
             </CardDescription>
           </div>
         </div>

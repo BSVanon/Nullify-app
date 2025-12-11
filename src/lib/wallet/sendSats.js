@@ -10,7 +10,7 @@ import { buildDonationOutput, clearInvoiceCache } from './donationFee.js'
 function publishMessageBoxHealth(partial) {
   if (typeof window === 'undefined') return
 
-  const prev = window.__NUKENOTE_MESSAGEBOX_HEALTH__ || {}
+  const prev = window.__NULLIFY_MESSAGEBOX_HEALTH__ || {}
   const next = {
     status: 'unknown',
     lastError: null,
@@ -25,10 +25,10 @@ function publishMessageBoxHealth(partial) {
     next.lastError = null
   }
 
-  window.__NUKENOTE_MESSAGEBOX_HEALTH__ = next
+  window.__NULLIFY_MESSAGEBOX_HEALTH__ = next
 
   try {
-    const event = new CustomEvent('nukenote:messagebox-health', { detail: next })
+    const event = new CustomEvent('nullify:messagebox-health', { detail: next })
     window.dispatchEvent(event)
   } catch (err) {
     console.warn('[MessageBoxHealth] Failed to dispatch health event', err)
@@ -379,7 +379,7 @@ if (typeof window !== 'undefined' && import.meta?.env?.DEV) {
         const { txid, response } = await sendSatsToAddress({
           address: targetAddress,
           amountSats,
-          description: `NukeNote tiny sats test to Bob (${amountSats} sats)`,
+          description: `Nullify tiny sats test to Bob (${amountSats} sats)`,
         })
         console.log('[Nullify debug] Tiny sats to Bob success', { txid, response })
         return { txid, response }

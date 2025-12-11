@@ -162,7 +162,7 @@ export function useSettingsSections({
       {
         id: "donate",
         label: "Donate",
-        description: "Support NukeNote development with a Bitcoin donation.",
+        description: "Support Nullify development with a Bitcoin donation.",
         icon: Heart,
         render: () => (
           <DonateSection walletConnected={walletConnected} />

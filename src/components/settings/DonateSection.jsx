@@ -66,7 +66,7 @@ export default function DonateSection({ walletConnected }) {
 
       const result = await sendDonationToHDBot({
         amountSats: value,
-        description: `NukeNote donation (${value.toLocaleString()} sats)`,
+        description: `Nullify donation (${value.toLocaleString()} sats)`,
       })
       
       addNotification({
@@ -90,7 +90,7 @@ export default function DonateSection({ walletConnected }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Support NukeNote</CardTitle>
+        <CardTitle>Support Nullify</CardTitle>
         <CardDescription>
           Send a Bitcoin donation to help cover development and infrastructure costs.
         </CardDescription>

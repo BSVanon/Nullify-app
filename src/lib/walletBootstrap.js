@@ -4,7 +4,8 @@ import {
   connectJsonApiWallet,
   getCachedJsonApiWallet,
   JSON_API_CAPABILITIES,
-  resetJsonApiCache
+  resetJsonApiCache,
+  ensureAuthenticated
 } from './wallet/jsonApiClient'
 import { initHeadlessWallet } from './wallet/brc7-headless.js'
 import { resetWalletWarmup } from './wallet/client.js'
@@ -92,10 +93,16 @@ class WalletBootstrap {
       
       console.log('[walletBootstrap] Attempting JSON-API connection (Metanet Desktop on ' + parsedHost + ')')
       
+      // IMPORTANT: Call waitForAuthentication FIRST to trigger BRC-73 grouped permissions
+      // This presents all permissions from manifest.json in ONE dialog instead of multiple popups
+      console.log('[walletBootstrap] Requesting grouped permissions via waitForAuthentication...')
+      await ensureAuthenticated()
+      console.log('[walletBootstrap] Grouped permissions granted')
+      
       // Create WalletClient with explicit host to avoid SDK default port issues
       const wallet = new WalletClient('json-api', parsedHost)
       
-      // Test connection with getPublicKey
+      // Test connection with getPublicKey (should NOT trigger popup - already authorized)
       const result = await wallet.getPublicKey({ identityKey: true })
       const identityKey = result.publicKey || result.identityKey || result
       

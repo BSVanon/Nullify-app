@@ -8,7 +8,7 @@ export async function anchorViaWallet(hashHex) {
 
   try {
     const response = await client.createAction({
-      description: 'Anchor NukeNote proof',
+      description: 'Anchor Nullify proof',
       outputs: [{ satoshis: 0, lockingScript: scriptHex, outputDescription: 'TPF1 anchor' }]
     })
     const txid = response?.txid || response?.result?.txid || response?.transactionId || response?.id || null

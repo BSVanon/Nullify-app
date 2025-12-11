@@ -10,14 +10,14 @@ const DEFAULT_HEALTH = {
 /**
  * Subscribe to MessageBox / PeerPay health updates pushed from wallet helpers.
  *
- * The wallet layer updates `window.__NUKENOTE_MESSAGEBOX_HEALTH__` and emits
- * a `nukenote:messagebox-health` event whenever status changes. This hook
+ * The wallet layer updates `window.__NULLIFY_MESSAGEBOX_HEALTH__` and emits
+ * a `nullify:messagebox-health` event whenever status changes. This hook
  * turns that into reactive state for the diagnostics UI.
  */
 export function useMessageBoxHealth() {
   const [health, setHealth] = useState(() => {
     if (typeof window === 'undefined') return DEFAULT_HEALTH;
-    const existing = window.__NUKENOTE_MESSAGEBOX_HEALTH__;
+    const existing = window.__NULLIFY_MESSAGEBOX_HEALTH__;
     return existing ? { ...DEFAULT_HEALTH, ...existing } : DEFAULT_HEALTH;
   });
 
@@ -29,16 +29,16 @@ export function useMessageBoxHealth() {
       setHealth((prev) => ({ ...prev, ...event.detail }));
     };
 
-    window.addEventListener('nukenote:messagebox-health', handler);
+    window.addEventListener('nullify:messagebox-health', handler);
 
     // Sync with any state that might have been set before we subscribed
-    const current = window.__NUKENOTE_MESSAGEBOX_HEALTH__;
+    const current = window.__NULLIFY_MESSAGEBOX_HEALTH__;
     if (current) {
       setHealth((prev) => ({ ...prev, ...current }));
     }
 
     return () => {
-      window.removeEventListener('nukenote:messagebox-health', handler);
+      window.removeEventListener('nullify:messagebox-health', handler);
     };
   }, []);
 

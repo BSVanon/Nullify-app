@@ -1,7 +1,7 @@
 import localforage from 'localforage'
 
 const BASE_CONFIG = {
-  name: 'nukenote-messaging'
+  name: 'nullify-messaging'
 }
 
 export const appStateStore = localforage.createInstance({

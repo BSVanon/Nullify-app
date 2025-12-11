@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 
-const TYPING_PREFS_KEY = "nukenote:typing-indicator-preferences";
+const TYPING_PREFS_KEY = "nullify:typing-indicator-preferences";
 const DEFAULT_PREF_KEY = "__default__";
 
 const hasWindow = typeof window !== "undefined";

@@ -15,7 +15,7 @@ function UploadFileStep({
     <Card>
       <CardHeader>
         <CardTitle>Step 2: Upload File</CardTitle>
-        <CardDescription>Upload a file to create a NukeNote. Files never leave the browser until encrypted.</CardDescription>
+        <CardDescription>Upload a file to create a self-destructing access token. Files never leave the browser until encrypted.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <NukeNoteFileUpload onFileProcessed={onFileProcessed} />

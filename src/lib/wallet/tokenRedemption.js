@@ -282,7 +282,7 @@ export async function redeemDataToken({
   dtVout = 0,
   identityPrivateKey,
   storageUrlOverride,
-  fileName = 'nukenote.bin',
+  fileName = 'nullify.bin',
   artifacts = null,
   broadcast = null
 }) {

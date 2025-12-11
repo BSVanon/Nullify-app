@@ -1,7 +1,7 @@
 /**
  * Translates technical error messages into human-readable notifications.
  * 
- * NukeNote has many external dependencies (wallet services, overlay servers, 
+ * Nullify has many external dependencies (wallet services, overlay servers, 
  * blockchain APIs) that can fail in ways users can't control. This module
  * provides actionable guidance instead of raw technical errors.
  */
@@ -60,8 +60,8 @@ const ERROR_PATTERNS = [
   },
   {
     match: /access control checks|not allowed to request resource/i,
-    message: 'Your browser blocked NukeNote from reaching your local wallet.',
-    action: 'If you are using a desktop wallet on this machine, try running NukeNote from a local address (for example http://localhost) or a desktop-bundled version, then try again.',
+    message: 'Your browser blocked Nullify from reaching your local wallet.',
+    action: 'If you are using a desktop wallet on this machine, try running Nullify from a local address (for example http://localhost) or a desktop-bundled version, then try again.',
     recoverable: true,
     category: 'wallet',
   },

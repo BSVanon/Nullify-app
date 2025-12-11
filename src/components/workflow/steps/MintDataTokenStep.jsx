@@ -141,7 +141,7 @@ function MintDataTokenStep({
             </div>
             <div className="space-y-2">
               <Button onClick={resetWorkflow} className="w-full">
-                Create another NukeNote
+                Create another secure link
               </Button>
               {ctOutpoint && (
                 <Button
@@ -169,7 +169,7 @@ function MintDataTokenStep({
                 onClick={() => handleRedeemDataToken({
                   identityPrivateKey: redeemKeyInput,
                   storageUrlOverride: redeemUrlInput || undefined,
-                  fileName: `${uploadedFile?.name || 'nukenote'}.decoded`,
+                  fileName: `${uploadedFile?.name || 'nullify'}.decoded`,
                   ctArtifacts,
                   dtArtifactsOverride: dtArtifacts,
                   ctBroadcast,
@@ -185,7 +185,7 @@ function MintDataTokenStep({
                   onClick={() => {
                     const anchor = document.createElement('a')
                     anchor.href = dtRedeemResult.decryptedUrl
-                    anchor.download = dtRedeemResult.fileName || 'nukenote.bin'
+                    anchor.download = dtRedeemResult.fileName || 'nullify.bin'
                     document.body.appendChild(anchor)
                     anchor.click()
                     document.body.removeChild(anchor)

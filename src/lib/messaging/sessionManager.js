@@ -4,7 +4,7 @@
  * so multiple guests can join the same thread without identity conflicts
  */
 
-const SESSION_KEY = 'nukenote-session-id'
+const SESSION_KEY = 'nullify-session-id'
 
 /**
  * Get or create a session ID for this tab/window

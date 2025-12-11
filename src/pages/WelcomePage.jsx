@@ -47,7 +47,7 @@ export default function WelcomePage() {
     <div className="mx-auto flex max-w-4xl flex-col gap-8 py-12">
       <div className="space-y-3 text-center">
         <Badge variant="outline" className="px-3 py-1 text-sm">
-          Welcome to NukeNote
+          Welcome to Nullify
         </Badge>
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Secure P2P Messaging with Verifiable Deletion</h1>
         <p className="text-muted-foreground">

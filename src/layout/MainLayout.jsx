@@ -54,7 +54,7 @@ function MobileHeader({ onOpenWallet }) {
             </div>
           </SheetContent>
         </Sheet>
-        <span className="text-lg font-semibold">NukeNote</span>
+        <span className="text-lg font-semibold">Nullify</span>
       </div>
       <Button variant="ghost" size="icon" onClick={onOpenWallet}>
         <Wallet2 className="h-5 w-5" />

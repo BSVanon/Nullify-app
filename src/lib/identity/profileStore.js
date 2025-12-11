@@ -7,19 +7,19 @@
 
 import localforage from 'localforage'
 
-const PROFILES_KEY = 'nukenote:profiles'
-const AVATARS_KEY = 'nukenote:avatars'
+const PROFILES_KEY = 'nullify:profiles'
+const AVATARS_KEY = 'nullify:avatars'
 
 // Initialize localforage instance for profiles
 const profileStore = localforage.createInstance({
-  name: 'NukeNote',
+  name: 'Nullify',
   storeName: 'profiles',
   description: 'User profile data (display names, about, avatars)'
 })
 
 // Separate store for avatar binary data (base64)
 const avatarStore = localforage.createInstance({
-  name: 'NukeNote',
+  name: 'Nullify',
   storeName: 'avatars',
   description: 'Avatar image data'
 })

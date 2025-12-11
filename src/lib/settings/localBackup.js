@@ -38,11 +38,11 @@ export async function buildLocalBackupPayload() {
     getAllAvatars(),
   ])
 
-  const theme = readLocalStorage('nukenote.theme')
-  const textScale = readLocalStorage('nukenote.textScale')
-  const sendOnEnter = readLocalStorage('nukenote:send-on-enter')
-  const typingPrefs = readLocalStorage('nukenote:typing-indicator-preferences')
-  const remoteSyncEnabled = readLocalStorage('nukenote:remote-sync-enabled')
+  const theme = readLocalStorage('nullify.theme')
+  const textScale = readLocalStorage('nullify.textScale')
+  const sendOnEnter = readLocalStorage('nullify:send-on-enter')
+  const typingPrefs = readLocalStorage('nullify:typing-indicator-preferences')
+  const remoteSyncEnabled = readLocalStorage('nullify:remote-sync-enabled')
 
   return {
     version: 1,
@@ -117,26 +117,26 @@ export async function applyLocalBackupPayload(payload) {
   if (payload.ui && typeof payload.ui === 'object') {
     const { theme, textScale, sendOnEnter, typingPrefs, remoteSyncEnabled } = payload.ui
     if (theme === 'dark' || theme === 'light' || theme === 'system') {
-      writeLocalStorage('nukenote.theme', theme)
+      writeLocalStorage('nullify.theme', theme)
     }
     if (textScale === 'sm' || textScale === 'md' || textScale === 'lg') {
-      writeLocalStorage('nukenote.textScale', textScale)
+      writeLocalStorage('nullify.textScale', textScale)
     }
     if (sendOnEnter === 'true' || sendOnEnter === 'false' || sendOnEnter === null) {
       if (sendOnEnter === null) {
-        writeLocalStorage('nukenote:send-on-enter', null)
+        writeLocalStorage('nullify:send-on-enter', null)
       } else {
-        writeLocalStorage('nukenote:send-on-enter', sendOnEnter)
+        writeLocalStorage('nullify:send-on-enter', sendOnEnter)
       }
     }
     if (typeof typingPrefs === 'string') {
-      writeLocalStorage('nukenote:typing-indicator-preferences', typingPrefs)
+      writeLocalStorage('nullify:typing-indicator-preferences', typingPrefs)
     }
     if (remoteSyncEnabled === 'true' || remoteSyncEnabled === 'false' || remoteSyncEnabled === null) {
       if (remoteSyncEnabled === null) {
-        writeLocalStorage('nukenote:remote-sync-enabled', null)
+        writeLocalStorage('nullify:remote-sync-enabled', null)
       } else {
-        writeLocalStorage('nukenote:remote-sync-enabled', remoteSyncEnabled)
+        writeLocalStorage('nullify:remote-sync-enabled', remoteSyncEnabled)
       }
     }
   }

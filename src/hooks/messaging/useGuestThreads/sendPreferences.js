@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 
-const SEND_ON_ENTER_KEY = "nukenote:send-on-enter";
+const SEND_ON_ENTER_KEY = "nullify:send-on-enter";
 const hasWindow = typeof window !== "undefined";
 
 function readSendPreference() {
