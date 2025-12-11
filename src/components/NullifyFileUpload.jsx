@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 const DEFAULT_TOOLTIP =
   'Upload a file to create a self-destructing access token. The file will be encrypted and stored off-chain, with access controlled by blockchain tokens.'
 
-export default function NukeNoteFileUpload({
+export default function NullifyFileUpload({
   onFileProcessed,
   tooltip = DEFAULT_TOOLTIP,
   disabled = false,
@@ -117,7 +117,7 @@ export default function NukeNoteFileUpload({
       >
         <input
           ref={inputRef}
-          id="nukeNoteFileUpload"
+          id="nullifyFileUpload"
           type="file"
           className="hidden"
           onChange={handleChange}

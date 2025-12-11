@@ -52,8 +52,8 @@ export async function deriveKeyFromSignature(signature) {
   return crypto.subtle.deriveKey(
     {
       name: 'HKDF',
-      salt: encoder.encode('nukenote-backup-salt'),
-      info: encoder.encode('nukenote-backup-key'),
+      salt: encoder.encode('nullify-backup-salt'),
+      info: encoder.encode('nullify-backup-key'),
       hash: 'SHA-256',
     },
     keyMaterial,
@@ -155,7 +155,7 @@ export async function generateUserSalt(identityKey) {
   }
 
   const encoder = new TextEncoder()
-  const data = encoder.encode(`nukenote-backup-salt:${identityKey}`)
+  const data = encoder.encode(`nullify-backup-salt:${identityKey}`)
   const hashBuffer = await crypto.subtle.digest('SHA-256', data)
   const hashArray = new Uint8Array(hashBuffer)
   

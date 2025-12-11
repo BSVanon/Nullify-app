@@ -72,7 +72,7 @@ export async function discoverHolderProfile(pubkey) {
       })
       // Return in certificate-like format for compatibility
       return {
-        type: 'NukeNote.Profile',
+        type: 'Nullify.Profile',
         fields: {
           displayName: profile.displayName,
           about: profile.about,

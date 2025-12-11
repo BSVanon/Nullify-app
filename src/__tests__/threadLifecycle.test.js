@@ -131,6 +131,7 @@ describe('mintThreadCT integration', () => {
       ctVout: 1,
       recipientPubkeys: ['holder-key', 'guest-key'],
       threadKeyBase64: 'raw-thread-key',
+      description: 'Authorize my own access to the new Nullify Thread',
     });
 
     expect(saveThreadMetadata).toHaveBeenCalledWith(

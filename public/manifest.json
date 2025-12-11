@@ -21,27 +21,27 @@
     "groupPermissions": {
       "protocolPermissions": [
         {
-          "protocolID": [2, "NukeNote Thread CT"],
+          "protocolID": [2, "Nullify Thread CT"],
           "counterparty": "self",
           "description": "Create and manage secure conversations"
         },
         {
-          "protocolID": [2, "NukeNote CT"],
+          "protocolID": [2, "Nullify CT"],
           "counterparty": "self",
           "description": "Manage conversation ownership"
         },
         {
-          "protocolID": [2, "NukeNote DT"],
+          "protocolID": [2, "Nullify DT"],
           "counterparty": "self",
           "description": "Invite participants to conversations"
         },
         {
-          "protocolID": [2, "NukeNote Overlay"],
+          "protocolID": [2, "Nullify Overlay"],
           "counterparty": "self",
           "description": "Authenticate with messaging servers"
         },
         {
-          "protocolID": [2, "nukenote backup"],
+          "protocolID": [2, "nullify backup"],
           "counterparty": "self",
           "description": "Encrypt and restore your message backups"
         }

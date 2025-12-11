@@ -95,7 +95,7 @@ export async function signOverlayPayload(payload, wallet) {
     // Sign using wallet
     const signResult = await wallet.createSignature({
       data: Array.from(messageHash),
-      protocolID: [2, 'NukeNote Overlay'],
+      protocolID: [2, 'Nullify Overlay'],
       keyID: 'overlay-sig',
     })
 

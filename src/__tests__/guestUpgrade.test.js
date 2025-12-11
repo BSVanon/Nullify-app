@@ -127,7 +127,7 @@ describe('performGuestUpgrade', () => {
 
     const proof = updatePayload.upgradeProof
     expect(proof).toBeDefined()
-    expect(proof.statement.intent).toBe('nukenote.link-guest-to-wallet')
+    expect(proof.statement.intent).toBe('nullify.link-guest-to-wallet')
     expect(proof.statement.threadId).toBe(TEST_THREAD_ID)
     expect(proof.statement.inviteHash).toBe(TEST_INVITE_HASH)
     expect(proof.statement.guestPublicKey).toBe(toHex(GUEST_PUBLIC_KEY))

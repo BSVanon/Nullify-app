@@ -20,7 +20,7 @@ const debugLog = (...args) => {
   }
 }
 
-function useNukeNoteWorkflow() {
+function useNullifyWorkflow() {
   const {
     isConnected,
     walletType,
@@ -355,4 +355,4 @@ function useNukeNoteWorkflow() {
   }
 }
 
-export default useNukeNoteWorkflow
+export default useNullifyWorkflow

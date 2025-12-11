@@ -5,7 +5,7 @@ import { mapLockingScriptsToIndexes } from '@/lib/wallet/transactionOutputs.js';
 /**
  * Mint Data Tokens (DTs) for a messaging thread (PATENT-CRITICAL)
  * 
- * DTs are the access rights tokens in the NukeNote erasure primitive:
+ * DTs are the access rights tokens in the Nullify erasure primitive:
  * - Each DT represents one user's permission to access the thread
  * - DTs reference the CT via outpoint (ctTxid:ctVout) - the relational link
  * - DTs contain the thread key wrapped (encrypted) for the recipient

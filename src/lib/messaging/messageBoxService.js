@@ -12,8 +12,8 @@ import { MessageBoxClient } from '@bsv/message-box-client'
 // Default MessageBox host (Babbage's public instance)
 const DEFAULT_MESSAGEBOX_HOST = 'https://messagebox.babbage.systems'
 
-// MessageBox name for NukeNote thread invites
-const NUKENOTE_INVITE_BOX = 'nukenote_invites'
+// MessageBox name for Nullify thread invites
+const NULLIFY_INVITE_BOX = 'nullify_invites'
 
 // Singleton client instance
 let messageBoxClient = null
@@ -74,7 +74,7 @@ export async function sendThreadInvite({
 
     // Construct the invite message payload
     const invitePayload = {
-      type: 'nukenote_thread_invite',
+      type: 'nullify_thread_invite',
       version: 1,
       threadId,
       inviteUrl,
@@ -85,7 +85,7 @@ export async function sendThreadInvite({
     // Send the message
     await client.sendMessage({
       recipient: recipientPubKey,
-      messageBox: NUKENOTE_INVITE_BOX,
+      messageBox: NULLIFY_INVITE_BOX,
       body: JSON.stringify(invitePayload),
     })
 
@@ -113,11 +113,11 @@ export async function listenForInvites({ walletClient, onInvite }) {
 
     // Listen for live messages in our invite box
     await client.listenForLiveMessages({
-      messageBox: NUKENOTE_INVITE_BOX,
+      messageBox: NULLIFY_INVITE_BOX,
       onMessage: async (msg) => {
         try {
           const payload = JSON.parse(msg.body)
-          if (payload.type === 'nukenote_thread_invite') {
+          if (payload.type === 'nullify_thread_invite') {
             console.log('[MessageBoxService] Received thread invite:', payload)
             onInvite?.({
               ...payload,
@@ -157,7 +157,7 @@ export async function checkPendingInvites({ walletClient }) {
 
     // List messages in our invite box
     const messages = await client.listMessages({
-      messageBox: NUKENOTE_INVITE_BOX,
+      messageBox: NULLIFY_INVITE_BOX,
     })
 
     // Parse and filter valid invites
@@ -165,7 +165,7 @@ export async function checkPendingInvites({ walletClient }) {
     for (const msg of messages) {
       try {
         const payload = JSON.parse(msg.body)
-        if (payload.type === 'nukenote_thread_invite') {
+        if (payload.type === 'nullify_thread_invite') {
           invites.push({
             ...payload,
             messageId: msg.messageId,

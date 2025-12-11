@@ -29,7 +29,7 @@ export async function signProfileCard(input, signFn, issuerPubKey) {
   }
 
   const card = {
-    proto: 'NukeNote.ProfileCard',
+    proto: 'Nullify.ProfileCard',
     v: 1,
     displayName: input.displayName,
     avatarHash: input.avatarHash || null,

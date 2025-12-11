@@ -46,7 +46,7 @@ async function getBackupKeyMaterial() {
   if (typeof client.getPublicKey === 'function') {
     try {
       const result = await client.getPublicKey({
-        protocolID: [2, 'nukenote backup'],
+        protocolID: [2, 'nullify backup'],
         keyID: 'backup-encryption-key-v1',
       })
       

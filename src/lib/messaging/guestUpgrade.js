@@ -99,7 +99,7 @@ export async function performGuestUpgrade({
   const { walletClient, walletPublicKey } = await ensureWalletConnection(walletBootstrap)
   const timestamp = new Date().toISOString()
   const statement = {
-    intent: 'nukenote.link-guest-to-wallet',
+    intent: 'nullify.link-guest-to-wallet',
     threadId,
     inviteHash: receipt.inviteHash,
     guestPublicKey: guestIdentity.publicKey,
@@ -143,9 +143,9 @@ export async function performGuestUpgrade({
   }
 
   if (!walletSignature) {
-    if (typeof window !== 'undefined' && import.meta?.env?.DEV && window.__NUKENOTE_WALLET_STUB__) {
+    if (typeof window !== 'undefined' && import.meta?.env?.DEV && window.__NULLIFY_WALLET_STUB__) {
       usedFallbackSignature = true
-      walletSignature = window.__NUKENOTE_WALLET_STUB__.sign(statement)
+      walletSignature = window.__NULLIFY_WALLET_STUB__.sign(statement)
     } else {
       throw new Error('Wallet did not return a signature for upgrade statement')
     }

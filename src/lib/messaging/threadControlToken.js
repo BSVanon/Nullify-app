@@ -8,7 +8,7 @@ import { buildDonationOutput, clearInvoiceCache } from '@/lib/wallet/donationFee
 /**
  * Mint a Control Token (CT) for a messaging thread (PATENT-CRITICAL)
  * 
- * The CT is the cornerstone of the NukeNote erasure primitive:
+ * The CT is the cornerstone of the Nullify erasure primitive:
  * - Acts as the "Rosetta Stone" that gives meaning to Data Tokens (DTs)
  * - Contains encrypted thread key + metadata (blobHash, policy, etc.)
  * - Burning the CT destroys the relational mapping: DT → CT → Thread Key
@@ -59,7 +59,7 @@ export async function mintThreadControlToken({
   const { PushDrop } = await import('/node_modules/@bsv/sdk/dist/esm/mod.js');
 
   const pushdrop = new PushDrop(client);
-  const protocolID = [2, 'NukeNote Thread CT'];
+  const protocolID = [2, 'Nullify Thread CT'];
   const keyID = 'thread-ct';
   const counterparty = 'self';
 

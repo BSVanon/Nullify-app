@@ -60,7 +60,7 @@ export async function mintDataTokens({
     // Use simple lock without protocol/signature for DTs
     const lockingScript = await pushdrop.lock(
       fields,
-      [2, 'NukeNote DT'],
+      [2, 'Nullify DT'],
       '1',
       'self',
       false,

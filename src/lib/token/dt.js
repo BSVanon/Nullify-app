@@ -1,5 +1,5 @@
 // src/lib/token/dt.js
-// Minimal, focused Data Token (DT) scaffolding for NukeNote (BRC-100/PushDrop-aligned)
+// Minimal, focused Data Token (DT) scaffolding for Nullify (BRC-100/PushDrop-aligned)
 // Pure data shaping and validation. No signing/custody here.
 
 /**

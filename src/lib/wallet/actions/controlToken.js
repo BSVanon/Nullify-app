@@ -32,7 +32,7 @@ export async function mintControlToken({ blobHash, encKeyWrap, hintURL, descript
   const pushdrop = new PushDrop(client);
   
   // Lock with proper parameters
-  const protocolID = [2, 'NukeNote CT']; // SecurityLevel 2, protocol ID (no hyphens per BSV Desktop)
+  const protocolID = [2, 'Nullify CT']; // SecurityLevel 2, protocol ID (no hyphens per BSV Desktop)
   const keyID = '1'; // Key derivation ID
   const counterparty = 'self'; // Self-signed
   

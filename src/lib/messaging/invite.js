@@ -71,7 +71,7 @@ export function createInvitePayload({
   const exp = typeof expiresAt === 'number' ? expiresAt : Math.floor(Date.now() / 1000) + 86400
 
   return {
-    proto: 'NukeNote.Invite',
+    proto: 'Nullify.Invite',
     v: INVITE_VERSION,
     t: INVITE_TYPE,
     threadId,

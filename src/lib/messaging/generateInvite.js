@@ -73,7 +73,7 @@ export async function generateInvite({
 
   // Create invite payload
   const invitePayload = {
-    proto: 'NukeNote.Invite',
+    proto: 'Nullify.Invite',
     v: 1,
     t: 'invite',
     threadId,
@@ -117,7 +117,7 @@ export async function generateInvite({
 
   // Create signature statement
   const statement = {
-    intent: 'nukenote.invite',
+    intent: 'nullify.invite',
     threadId,
     inviter: holderPublicKey,
     guestPublicKey: guestPublicKeyHex,

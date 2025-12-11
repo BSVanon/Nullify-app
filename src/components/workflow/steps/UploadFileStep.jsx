@@ -1,6 +1,6 @@
 import React from 'react'
 
-import NukeNoteFileUpload from '@/components/NukeNoteFileUpload'
+import NullifyFileUpload from '@/components/NullifyFileUpload'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -18,7 +18,7 @@ function UploadFileStep({
         <CardDescription>Upload a file to create a self-destructing access token. Files never leave the browser until encrypted.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <NukeNoteFileUpload onFileProcessed={onFileProcessed} />
+        <NullifyFileUpload onFileProcessed={onFileProcessed} />
         {uploadedFile && ctBlobHash && (
           <div className="space-y-3">
             <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-200">

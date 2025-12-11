@@ -1,4 +1,4 @@
-// Wallet bootstrap for NukeNote (BRC-7 first)
+// Wallet bootstrap for Nullify (BRC-7 first)
 // - Detects and returns a stable CWI interface
 // - Works with same-origin iframe (preferred) or window injection
 // - No secrets, no mock data; leaves advanced methods to wallet implementation

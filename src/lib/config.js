@@ -25,36 +25,34 @@ export const CONFIG = {
   // BRC-6 XDM remains as fallback for other BRC-100 wallets
   WALLET_SUBSTRATE: getEnv('VITE_WALLET_SUBSTRATE') || getEnv('WALLET_SUBSTRATE') || 'auto',
 
-  METANET_DESKTOP_ORIGIN: getEnv('VITE_DESKTOP_ORIGIN') || getEnv('NUKENOTE_DESKTOP_ORIGIN') || 'http://localhost:3321',
+  METANET_DESKTOP_ORIGIN: getEnv('VITE_DESKTOP_ORIGIN') || 'http://localhost:3321',
 
-  OVERLAY_ENDPOINT: getEnv('VITE_OVERLAY_ENDPOINT') || getEnv('NUKENOTE_OVERLAY_ENDPOINT') || '',
+  OVERLAY_ENDPOINT: getEnv('VITE_OVERLAY_ENDPOINT') || '',
 
-  HELPER_CACHE_ENDPOINT: getEnv('VITE_HELPER_CACHE_ENDPOINT') || getEnv('NUKENOTE_HELPER_CACHE_ENDPOINT') || '',
+  HELPER_CACHE_ENDPOINT: getEnv('VITE_HELPER_CACHE_ENDPOINT') || '',
 
-  MESSAGE_BOX_WS_URL: getEnv('VITE_MESSAGE_BOX_WS_URL') || getEnv('NUKENOTE_MESSAGE_BOX_WS_URL') || '',
+  MESSAGE_BOX_WS_URL: getEnv('VITE_MESSAGE_BOX_WS_URL') || '',
 
-  MESSAGE_BOX_APP_ID: getEnv('VITE_MESSAGE_BOX_APP_ID') || getEnv('NUKENOTE_MESSAGE_BOX_APP_ID') || '',
+  MESSAGE_BOX_APP_ID: getEnv('VITE_MESSAGE_BOX_APP_ID') || '',
 
-  MESSAGE_BOX_APP_SECRET: getEnv('VITE_MESSAGE_BOX_APP_SECRET') || getEnv('NUKENOTE_MESSAGE_BOX_APP_SECRET') || '',
+  MESSAGE_BOX_APP_SECRET: getEnv('VITE_MESSAGE_BOX_APP_SECRET') || '',
 
-  REMOTE_MESSAGING_API_URL:
-    getEnv('VITE_REMOTE_MESSAGING_API_URL') || getEnv('NUKENOTE_REMOTE_MESSAGING_API_URL') || '',
+  REMOTE_MESSAGING_API_URL: getEnv('VITE_REMOTE_MESSAGING_API_URL') || '',
 
   REMOTE_MESSAGING_ENABLED: (() => {
-    const raw =
-      getEnv('VITE_REMOTE_MESSAGING_ENABLED') ?? getEnv('NUKENOTE_REMOTE_MESSAGING_ENABLED') ?? ''
+    const raw = getEnv('VITE_REMOTE_MESSAGING_ENABLED') ?? ''
     if (typeof raw === 'string' && raw.trim() !== '') {
       return !['false', '0', 'no', 'off'].includes(raw.trim().toLowerCase())
     }
     return false
   })(),
 
-  DONATION_IDENTITY_KEY: getEnv('VITE_DONATION_IDENTITY_KEY') || getEnv('NUKENOTE_DONATION_IDENTITY_KEY') || '',
+  DONATION_IDENTITY_KEY: getEnv('VITE_DONATION_IDENTITY_KEY') || '',
 
   // Debug Configuration
   // Set VITE_DEBUG_VERBOSE=true to enable verbose logging for wallet, overlay, and payment flows
   DEBUG_VERBOSE: (() => {
-    const raw = getEnv('VITE_DEBUG_VERBOSE') ?? getEnv('NUKENOTE_DEBUG_VERBOSE') ?? ''
+    const raw = getEnv('VITE_DEBUG_VERBOSE') ?? ''
     if (typeof raw === 'string' && raw.trim() !== '') {
       return ['true', '1', 'yes', 'on'].includes(raw.trim().toLowerCase())
     }

@@ -33,7 +33,7 @@ export async function burnControlToken({
 
   console.log('[burnControlToken] Creating PushDrop instance for unlock template...');
   const pushdrop = new PushDrop(client);
-  const protocolID = [2, 'NukeNote Thread CT']; // Must match CT minting
+  const protocolID = [2, 'Nullify Thread CT']; // Must match CT minting
   const keyID = 'thread-ct'; // Must match CT minting
   const counterparty = 'self';
 

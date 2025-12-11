@@ -2,7 +2,7 @@ import React from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import NukeNoteFileUpload from '@/components/NukeNoteFileUpload'
+import NullifyFileUpload from '@/components/NullifyFileUpload'
 import WalletConnectionCard from './WalletConnectionCard'
 
 function UploadStep({
@@ -42,7 +42,7 @@ function UploadStep({
           />
         )}
 
-        {isConnected && <NukeNoteFileUpload onFileProcessed={onFileProcessed} />}
+        {isConnected && <NullifyFileUpload onFileProcessed={onFileProcessed} />}
 
         {uploadedFile && (
           <div className="flex justify-center">

@@ -1,5 +1,5 @@
 // src/lib/token/ct.js
-// Minimal, focused Control Token (CT) scaffolding for NukeNote (BRC-100/PushDrop-aligned)
+// Minimal, focused Control Token (CT) scaffolding for Nullify (BRC-100/PushDrop-aligned)
 // No signing/custody here. Keep pure data shaping and validation. All chain ops happen elsewhere via @bsv/sdk.
 
 /**
