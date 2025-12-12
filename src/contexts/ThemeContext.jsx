@@ -21,8 +21,6 @@ export function ThemeProvider({ children }) {
       let initialTheme = 'dark';
       if (stored === 'dark' || stored === 'light' || stored === 'system') {
         initialTheme = stored;
-      } else if (typeof window !== 'undefined' && window.matchMedia) {
-        initialTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       }
       setTheme(initialTheme);
     } catch (err) {

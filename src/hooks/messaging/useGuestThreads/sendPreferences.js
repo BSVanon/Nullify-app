@@ -37,7 +37,7 @@ function writeSendPreference(value) {
 export function useSendPreference() {
   const [sendOnEnter, setSendOnEnterState] = useState(() => {
     const stored = readSendPreference();
-    return stored ?? false;
+    return stored ?? true;
   });
 
   const setSendOnEnter = useCallback((next) => {
