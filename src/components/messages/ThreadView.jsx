@@ -85,6 +85,37 @@ export default function ThreadView({
     }
   }, [thread, guestMode, hasJoinMessage, participantPubKey, onSendMessage])
 
+  if (!thread) {
+    return (
+      <section className="flex h-full flex-1 flex-col">
+        <div className="flex flex-1 items-center justify-center bg-background">
+          <div className="flex max-w-md flex-col items-center gap-6 px-6 text-center">
+            <div className="h-24 w-24 select-none">
+              <img
+                src="/Nullify_light.svg"
+                alt="Nullify"
+                className="h-full w-full dark:hidden"
+                draggable={false}
+              />
+              <img
+                src="/Nullify_dark.svg"
+                alt="Nullify"
+                className="hidden h-full w-full dark:block"
+                draggable={false}
+              />
+            </div>
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold">Welcome to Nullify</h2>
+              <p className="text-sm text-muted-foreground">
+                Select a thread from the sidebar or create a new invite.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   const handleCopyOutpoint = () => {
     if (!ctOutpointLabel) return
     navigator?.clipboard?.writeText(ctOutpointLabel).catch(() => {})
