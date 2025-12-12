@@ -27,11 +27,6 @@ export function useOverlayClient() {
   };
 
   useEffect(() => {
-    // If client already exists and is valid, don't recreate
-    if (overlayClientRef.current && typeof overlayClientRef.current.subscribe === 'function') {
-      return;
-    }
-
     let cancelled = false;
 
     const handleStatus = (next) => {
@@ -43,15 +38,14 @@ export function useOverlayClient() {
       typeof walletBootstrap.getStatus === 'function'
         ? walletBootstrap.getStatus()
         : {};
-    const hasWalletIdentity = Boolean(
-      walletStatus?.wallet && walletStatus?.identityKey,
-    );
     const messageBoxHost = CONFIG.MESSAGE_BOX_WS_URL || null;
 
     // Always use websocket mode for now - messagebox mode is not yet stable
     // Mode switching based on receipts was causing client recreation and connection churn
     const mode = 'websocket';
     
+    // Always call getOverlayClient to update the status callback
+    // The singleton will reuse the existing client but update the callback
     const client = getOverlayClient({
       mode,
       messageBoxHost,
@@ -67,7 +61,7 @@ export function useOverlayClient() {
       cancelled = true;
       // Don't close singleton here - it survives remounts
     };
-  }); // No deps - run on every render but early-exit if client exists
+  }, []); // Run once on mount - singleton handles callback updates
 
   return {
     client: overlayClientRef.current,
