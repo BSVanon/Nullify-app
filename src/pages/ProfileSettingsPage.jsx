@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { setHolderProfile, discoverHolderProfile } from '@/lib/identity/certificates.js'
 import { getWallet } from '@/lib/wallet/client.js'
 import { saveAvatar, getAvatar, deleteAvatar } from '@/lib/identity/profileStore.js'
+import useGuestThreads from '@/hooks/messaging/useGuestThreads.js'
 
 /**
  * Profile Settings Page for Wallet Holders
@@ -21,6 +22,7 @@ const AVATAR_DIMENSION = 256 // Resize to 256x256
 
 export default function ProfileSettingsPage() {
   const navigate = useNavigate()
+  const { broadcastProfileUpdate } = useGuestThreads()
   const fileInputRef = useRef(null)
   const [displayName, setDisplayName] = useState('')
   const [about, setAbout] = useState('')
@@ -165,6 +167,17 @@ export default function ProfileSettingsPage() {
         about: about.trim() || null,
         avatarHash: avatarHash || null,
       })
+
+      // Broadcast profile update to all active threads so peers see the new name
+      try {
+        await broadcastProfileUpdate({
+          displayName: displayName.trim(),
+          avatarHash: avatarHash || null,
+        })
+        console.log('[ProfileSettings] Profile update broadcasted to peers')
+      } catch (broadcastErr) {
+        console.warn('[ProfileSettings] Failed to broadcast profile update:', broadcastErr)
+      }
 
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)

@@ -145,6 +145,7 @@ export default function useGuestThreads() {
     createNewThread,
     generateThreadInvite,
     updateThreadLabel,
+    broadcastProfileUpdate,
   } = useThreadActions({
     receiptsByThread,
     setReceiptsByThread,
@@ -199,6 +200,7 @@ export default function useGuestThreads() {
     createNewThread,
     generateThreadInvite,
     updateThreadLabel,
+    broadcastProfileUpdate,
     typingIndicatorEnabled,
     setTypingIndicatorEnabled,
     sendOnEnter,

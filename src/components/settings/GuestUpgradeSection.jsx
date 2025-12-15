@@ -47,7 +47,25 @@ export default function GuestUpgradeSection({
                       Status: {thread.status === "ready" ? "Guest ready" : thread.status}
                     </p>
                     {errorMessage && (
-                      <p className="text-xs text-destructive">{errorMessage}</p>
+                      <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2">
+                        <p className="text-xs font-medium text-destructive">{errorMessage}</p>
+                        
+                        {/* Show browser-specific troubleshooting tips for wallet connection issues */}
+                        {/localhost|fetch|network|CORS|blocked|shields|privacy|Cannot reach|Browser blocked/i.test(errorMessage) && (
+                          <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                            <p className="font-medium">Common fixes:</p>
+                            <ul className="list-disc space-y-0.5 pl-4">
+                              <li><strong>Brave:</strong> Click the lion icon → "Allow all shields down for this site"</li>
+                              <li><strong>Safari:</strong> Preferences → Privacy → uncheck "Prevent cross-site tracking"</li>
+                              <li><strong>Firefox:</strong> Click shield icon in address bar → turn off Enhanced Tracking Protection</li>
+                              <li><strong>Chrome:</strong> Usually works, but check extensions that block localhost</li>
+                            </ul>
+                            <p className="mt-1 opacity-80">
+                              After changing settings, refresh this page and try again.
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                   <div className="flex items-center gap-2">

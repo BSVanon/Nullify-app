@@ -5,6 +5,7 @@ import { handleMintDt } from "./control/mintDt.js";
 import { handleLink } from "./control/link.js";
 import { handleBlock } from "./control/block.js";
 import { handleUnblock } from "./control/unblock.js";
+import { handleProfileUpdate } from "./control/profileUpdate.js";
 
 export async function handleControlEvent({
   event,
@@ -96,6 +97,12 @@ export async function handleControlEvent({
         setConversations,
         updateJoinReceipt,
         conversationFromReceipt,
+      });
+    case "profile-update":
+      return handleProfileUpdate({
+        event,
+        threadId,
+        receiptsRef,
       });
     default:
       return undefined;

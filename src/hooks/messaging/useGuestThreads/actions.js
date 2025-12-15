@@ -189,6 +189,34 @@ export function useThreadActions({
     [applyConversationUpdate, receiptsByThread, setReceiptsByThread],
   );
 
+  // Broadcast profile update to all active threads
+  const broadcastProfileUpdate = useCallback(
+    async ({ displayName, avatarHash }) => {
+      const threadIds = Object.keys(receiptsByThread);
+      if (threadIds.length === 0) return;
+
+      const publicKey = Object.values(receiptsByThread)[0]?.holderPublicKey ||
+                        Object.values(receiptsByThread)[0]?.guestPublicKey;
+      if (!publicKey) return;
+
+      const payload = {
+        action: 'profile-update',
+        publicKey,
+        displayName,
+        avatarHash: avatarHash || null,
+        updatedAt: new Date().toISOString(),
+      };
+
+      console.log('[broadcastProfileUpdate] Broadcasting to', threadIds.length, 'threads:', payload);
+
+      // Broadcast to all active threads
+      threadIds.forEach((threadId) => {
+        overlayClientRef.current?.publishControl(threadId, payload);
+      });
+    },
+    [receiptsByThread, overlayClientRef],
+  );
+
   return {
     blockInviter,
     sendMessage,
@@ -200,5 +228,6 @@ export function useThreadActions({
     createNewThread,
     generateThreadInvite,
     updateThreadLabel,
+    broadcastProfileUpdate,
   };
 }
