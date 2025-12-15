@@ -1,15 +1,19 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
 import useGuestThreadJoin from '@/hooks/messaging/useGuestThreadJoin'
+import useOnboardingFlag from '@/hooks/useOnboardingFlag'
 import { saveBlockedInviter } from '@/lib/messaging/storage'
 import { truncateMiddle } from '@/lib/utils'
 
 export default function InvitePage() {
   const navigate = useNavigate()
   const { blob } = useParams()
+  const { loading: onboardingLoading, completed: onboardingCompleted, markComplete } = useOnboardingFlag()
 
   const {
     status,
@@ -80,9 +84,49 @@ export default function InvitePage() {
   const showAcceptActions = status === STATUS.READY && !isExpired && !showBlocked
   const showDeclined = status === STATUS.DECLINED
   const showError = status === STATUS.ERROR || (isExpired && !showBlocked)
+  
+  // Show welcome content for first-time visitors
+  const isFirstTimeVisitor = !onboardingLoading && !onboardingCompleted
+
+  // Handle accept and mark onboarding complete
+  const handleAcceptInvite = useCallback(async () => {
+    // Mark onboarding complete when accepting invite
+    if (isFirstTimeVisitor) {
+      try {
+        await markComplete()
+      } catch (err) {
+        console.warn('[InvitePage] Failed to mark onboarding complete', err)
+      }
+    }
+    acceptAsGuest()
+  }, [acceptAsGuest, isFirstTimeVisitor, markComplete])
+
+  if (onboardingLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
+        Loading…
+      </div>
+    )
+  }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-10">
+      {/* Welcome header for first-time visitors */}
+      {isFirstTimeVisitor && (
+        <div className="mb-8 w-full max-w-2xl space-y-3 text-center">
+          <Badge variant="outline" className="px-3 py-1 text-sm">
+            Welcome to Nullify
+          </Badge>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            Secure P2P Messaging with Verifiable Deletion
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            You&apos;ve been invited to a private conversation. Accept below to start chatting securely.
+          </p>
+        </div>
+      )}
+
+      {/* Invite Card */}
       <Card className="w-full max-w-md shadow-lg">
         <CardContent className="space-y-6 p-6">
           {showError && (
@@ -139,7 +183,7 @@ export default function InvitePage() {
 
           {showAcceptActions && (
             <div className="space-y-2">
-              <Button onClick={acceptAsGuest} disabled={loading || blockProcessing} size="sm" className="w-full">
+              <Button onClick={handleAcceptInvite} disabled={loading || blockProcessing} size="sm" className="w-full">
                 {loading ? 'Joining…' : 'Join Chat'}
               </Button>
               <Button

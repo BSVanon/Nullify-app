@@ -1,3 +1,5 @@
+import { upsertContact } from '@/lib/identity/contactsStore.js'
+
 export async function handleLink({
   event,
   threadId,
@@ -9,9 +11,13 @@ export async function handleLink({
 }) {
   const walletKey = event.payload?.walletPublicKey;
   const upgradedAt = event.payload?.upgradedAt;
+  const walletDisplayName = event.payload?.displayName || null;
   if (!walletKey) return;
 
   let nextReceipt = null;
+  let peerUpgraded = false;
+  let oldPeerKey = null;
+  
   setReceiptsByThread((prev) => {
     const receipt = prev[threadId];
     if (!receipt) return prev;
@@ -37,6 +43,8 @@ export async function handleLink({
       walletKey &&
       walletKey !== receipt.holderPublicKey
     ) {
+      peerUpgraded = true;
+      oldPeerKey = receipt.guestPublicKey;
       nextReceipt = {
         ...receipt,
         peerWalletPublicKey: walletKey,
@@ -64,5 +72,29 @@ export async function handleLink({
           : conversation,
       ),
     );
+    
+    // Update contact when peer upgrades from guest to holder
+    if (peerUpgraded && walletKey) {
+      try {
+        // Update the new wallet key contact to be a holder
+        const contactPatch = { kind: 'holder' };
+        if (walletDisplayName) {
+          contactPatch.displayName = walletDisplayName;
+        }
+        await upsertContact(walletKey, contactPatch);
+        console.log('[handleLink] Updated peer contact to holder:', walletKey.slice(0, 16) + '...');
+        
+        // If there was an old guest key, update it to reference the new wallet key
+        if (oldPeerKey && oldPeerKey !== walletKey) {
+          await upsertContact(oldPeerKey, { 
+            upgradedToWallet: walletKey,
+            kind: 'guest' // Keep as guest but mark as upgraded
+          });
+          console.log('[handleLink] Marked old guest key as upgraded:', oldPeerKey.slice(0, 16) + '...');
+        }
+      } catch (error) {
+        console.warn('[handleLink] Failed to update contact on peer upgrade:', error);
+      }
+    }
   }
 }

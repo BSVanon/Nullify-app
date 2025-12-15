@@ -71,10 +71,19 @@ export function VerifyDialog({ pubkey, name, onClose, open = true, ownPubkey, ow
   }
 
   const handleVerify = async () => {
+    // Normalize for comparison: remove all whitespace
+    const normalizedInput = manualInput.replace(/\s+/g, '')
+    const normalizedTheirs = safetyTheirs?.replace(/\s+/g, '') || ''
+    
     console.log('[VerifyDialog] VERIFY BUTTON CLICKED', {
       pubkey: pubkey?.slice(0, 16) + '...',
-      manualInput: manualInput?.slice(0, 20) + '...',
-      safetyTheirsPreview: safetyTheirs?.slice(0, 20) + '...',
+      manualInputRaw: manualInput,
+      manualInputNormalized: normalizedInput,
+      safetyTheirsRaw: safetyTheirs,
+      safetyTheirsNormalized: normalizedTheirs,
+      lengthInput: normalizedInput.length,
+      lengthTheirs: normalizedTheirs.length,
+      areEqual: normalizedInput === normalizedTheirs,
     })
     
     if (!manualInput.trim()) {
@@ -88,7 +97,10 @@ export function VerifyDialog({ pubkey, name, onClose, open = true, ownPubkey, ow
     try {
       const matches = compareSafetyNumbers(safetyTheirs, manualInput)
       
-      console.log('[VerifyDialog] Safety numbers match:', matches)
+      console.log('[VerifyDialog] Safety numbers match:', matches, {
+        safetyTheirs,
+        manualInput,
+      })
       
       if (matches) {
         // Mark contact as verified and persist the verified safety number snapshot

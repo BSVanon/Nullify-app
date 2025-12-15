@@ -100,20 +100,32 @@ export default function WalletConnectionSection({
         {connectionBadge}
 
         {connectionError && (
-          <>
-            <p className="text-xs text-destructive">{connectionError}</p>
-            {/access control checks|not allowed to request resource/i.test(
-              connectionError,
-            ) && (
-              <p className="mt-1 text-xs text-muted-foreground">
-                Your browser is blocking Nullify from reaching your local wallet on this
-                machine (for example Metanet Desktop on http://localhost:3321). This can
-                happen when Nullify is loaded over HTTPS and tries to call a local HTTP
-                port. For local testing, run Nullify from a http://localhost address or
-                use the desktop-bundled version, and keep your wallet running.
+          <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-destructive dark:border-destructive/40 dark:bg-destructive/10">
+            <p className="text-xs font-medium">{connectionError}</p>
+            
+            {/* Show browser-specific troubleshooting tips */}
+            {/localhost|fetch|network|CORS|blocked|shields|privacy/i.test(connectionError) && (
+              <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                <p className="font-medium">Common fixes:</p>
+                <ul className="list-disc space-y-0.5 pl-4">
+                  <li><strong>Brave:</strong> Click the lion icon → "Allow all shields down for this site"</li>
+                  <li><strong>Safari:</strong> Preferences → Privacy → uncheck "Prevent cross-site tracking"</li>
+                  <li><strong>Firefox:</strong> Click shield icon in address bar → turn off Enhanced Tracking Protection</li>
+                  <li><strong>Chrome:</strong> Usually works, but check extensions that block localhost</li>
+                </ul>
+                <p className="mt-1 opacity-80">
+                  After changing settings, refresh this page and try connecting again.
+                </p>
+              </div>
+            )}
+            
+            {/access control checks|not allowed to request resource/i.test(connectionError) && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                Your browser is blocking Nullify from reaching your local wallet (Metanet Desktop on localhost:3321). 
+                This happens when HTTPS pages try to call local HTTP ports. Try the browser-specific fixes above.
               </p>
             )}
-          </>
+          </div>
         )}
 
         <div className="flex flex-wrap gap-2">

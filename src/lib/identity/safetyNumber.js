@@ -17,10 +17,13 @@ export function safetyNumber(pubkeyHex) {
     throw new Error('pubkeyHex is required and must be a string')
   }
 
+  // Normalize to lowercase for consistent hashing
+  const normalizedHex = pubkeyHex.toLowerCase()
+
   // Double-hash for fingerprint (SHA256 twice)
   // Convert hex string to Uint8Array for browser compatibility
   const pubkeyBytes = new Uint8Array(
-    pubkeyHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16))
+    normalizedHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16))
   )
   const hash1 = Hash.sha256(pubkeyBytes)
   const hash2 = Hash.sha256(hash1)

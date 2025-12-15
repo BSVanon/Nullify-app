@@ -36,6 +36,11 @@
           "description": "Invite participants to conversations"
         },
         {
+          "protocolID": [2, "Nullify DT"],
+          "counterparty": "anyone",
+          "description": "Receive conversation invites from others"
+        },
+        {
           "protocolID": [2, "Nullify Overlay"],
           "counterparty": "self",
           "description": "Authenticate with messaging servers"
@@ -44,6 +49,16 @@
           "protocolID": [2, "nullify backup"],
           "counterparty": "self",
           "description": "Encrypt and restore your message backups"
+        },
+        {
+          "protocolID": [2, "wallet payment"],
+          "counterparty": "anyone",
+          "description": "Send and receive sats payments"
+        },
+        {
+          "protocolID": [2, "PeerPay"],
+          "counterparty": "anyone",
+          "description": "Send and receive peer-to-peer payments"
         }
       ],
       "basketAccess": [

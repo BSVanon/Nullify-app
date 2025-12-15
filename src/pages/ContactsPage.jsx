@@ -130,12 +130,30 @@ export default function ContactsPage() {
     return { wallets, guests }
   }, [entries])
 
+  // Build a set of pubkeys that have active conversations
+  const activeConversationPubkeys = useMemo(() => {
+    const set = new Set()
+    for (const conv of conversations) {
+      if (conv?.peerPublicKey) {
+        set.add(conv.peerPublicKey.toLowerCase())
+      }
+    }
+    return set
+  }, [conversations])
+
   const filtered = useMemo(() => {
     let result = entries
 
-    // Filter by contact type
+    // Filter by contact type - but always show contacts with active conversations
     if (!showGuests) {
-      result = result.filter(([, contact]) => contact?.kind === 'holder')
+      result = result.filter(([pubkey, contact]) => {
+        // Always show wallet holders
+        if (contact?.kind === 'holder') return true
+        // Always show contacts with active conversations (even if guest)
+        if (activeConversationPubkeys.has(pubkey.toLowerCase())) return true
+        // Hide other guests
+        return false
+      })
     }
 
     // Filter by search term
@@ -155,7 +173,7 @@ export default function ContactsPage() {
     }
 
     return result
-  }, [entries, search, showGuests])
+  }, [entries, search, showGuests, activeConversationPubkeys])
 
   const selectedContact = selectedPubKey ? contacts[selectedPubKey] || null : null
   const { identity: selectedIdentity } = useIdentity(selectedPubKey, selectedContact?.kind || 'guest')
@@ -214,7 +232,13 @@ export default function ContactsPage() {
                     <span className="flex items-center gap-1">
                       <User className="h-3 w-3" />
                       {contactCounts.guests} guest{contactCounts.guests !== 1 ? 's' : ''}
-                      {!showGuests && ' (hidden)'}
+                      {!showGuests && (() => {
+                        // Count how many guests are actually hidden (not in active conversations)
+                        const hiddenCount = entries.filter(([pubkey, contact]) => 
+                          contact?.kind !== 'holder' && !activeConversationPubkeys.has(pubkey.toLowerCase())
+                        ).length
+                        return hiddenCount > 0 ? ` (${hiddenCount} hidden)` : ''
+                      })()}
                     </span>
                   )}
                 </div>
@@ -226,7 +250,7 @@ export default function ContactsPage() {
                     className="h-7 text-xs gap-1.5"
                   >
                     <Filter className="h-3 w-3" />
-                    {showGuests ? 'Hide guests' : 'Show guests'}
+                    {showGuests ? 'Hide inactive guests' : 'Show all guests'}
                   </Button>
                 )}
               </div>
@@ -248,12 +272,12 @@ export default function ContactsPage() {
                         thread from Messages to populate this list.
                       </p>
                     </>
-                  ) : !showGuests && contactCounts.wallets === 0 ? (
+                  ) : !showGuests && contactCounts.wallets === 0 && activeConversationPubkeys.size === 0 ? (
                     <>
                       <p className="font-medium">No wallet contacts</p>
                       <p className="max-w-sm text-xs text-muted-foreground">
-                        You have {contactCounts.guests} guest contact{contactCounts.guests !== 1 ? 's' : ''} hidden.
-                        Guest contacts use ephemeral keys and can't receive direct invites.
+                        You have {contactCounts.guests} guest contact{contactCounts.guests !== 1 ? 's' : ''} without active chats.
+                        These are hidden by default since they use ephemeral keys.
                       </p>
                       <Button
                         variant="outline"
@@ -261,7 +285,7 @@ export default function ContactsPage() {
                         onClick={() => setShowGuests(true)}
                         className="mt-2"
                       >
-                        Show guest contacts
+                        Show all contacts
                       </Button>
                     </>
                   ) : (

@@ -13,6 +13,25 @@ const getEnv = (key) => {
   return undefined
 }
 
+const runtimeHost = (() => {
+  try {
+    if (typeof window !== 'undefined' && window?.location?.hostname) {
+      return String(window.location.hostname)
+    }
+  } catch {
+    // ignore
+  }
+  return ''
+})()
+
+const defaultOverlayEndpoint = runtimeHost.endsWith('nullify.onl')
+  ? 'wss://relay.nullify.onl/ws'
+  : ''
+
+const defaultHelperCacheEndpoint = runtimeHost.endsWith('nullify.onl')
+  ? 'https://cache.nullify.onl'
+  : ''
+
 export const CONFIG = {
   // BSV Network Configuration (env-driven; mainnet by default per policy)
   BSV_NETWORK: getEnv('VITE_BSV_NETWORK') || getEnv('BSV_NETWORK') || 'main',
@@ -27,9 +46,9 @@ export const CONFIG = {
 
   METANET_DESKTOP_ORIGIN: getEnv('VITE_DESKTOP_ORIGIN') || 'http://localhost:3321',
 
-  OVERLAY_ENDPOINT: getEnv('VITE_OVERLAY_ENDPOINT') || '',
+  OVERLAY_ENDPOINT: getEnv('VITE_OVERLAY_ENDPOINT') || defaultOverlayEndpoint,
 
-  HELPER_CACHE_ENDPOINT: getEnv('VITE_HELPER_CACHE_ENDPOINT') || '',
+  HELPER_CACHE_ENDPOINT: getEnv('VITE_HELPER_CACHE_ENDPOINT') || defaultHelperCacheEndpoint,
 
   MESSAGE_BOX_WS_URL: getEnv('VITE_MESSAGE_BOX_WS_URL') || '',
 

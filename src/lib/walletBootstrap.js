@@ -76,6 +76,34 @@ class WalletBootstrap {
         throw error
       }
 
+      // Detect common browser blocking scenarios and provide helpful guidance
+      const msg = error?.message || ''
+      
+      // Network/fetch failures often indicate browser shields blocking localhost
+      if (/fetch|network|ECONNREFUSED|Failed to fetch|NetworkError|TypeError.*fetch/i.test(msg)) {
+        throw new Error(
+          'Cannot reach Metanet Desktop. This is often caused by browser privacy settings blocking localhost connections. ' +
+          'Try: (1) Disable shields/tracking protection for this site, (2) Allow localhost in browser settings, ' +
+          'or (3) Use a different browser. See getmetanet.com for setup help.'
+        )
+      }
+      
+      // CORS errors can happen with strict browser policies
+      if (/CORS|cross-origin|blocked by|Access-Control/i.test(msg)) {
+        throw new Error(
+          'Browser blocked the wallet connection (CORS policy). ' +
+          'Try disabling strict privacy shields for this site, or use a browser with less restrictive settings.'
+        )
+      }
+      
+      // Timeout errors
+      if (/timeout|timed out/i.test(msg)) {
+        throw new Error(
+          'Wallet connection timed out. Make sure Metanet Desktop is running and try again. ' +
+          'If the problem persists, check your browser\'s privacy settings.'
+        )
+      }
+
       throw new Error(`Wallet initialization failed: ${error.message}`)
     }
   }

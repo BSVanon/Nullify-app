@@ -87,6 +87,7 @@ export async function sendSatsToIdentityKey({ identityKey, amountSats, descripti
   const response = await client.createAction({
     description: actionDescription,
     outputs,
+    labels: ['wallet payment'],
   })
 
   const txid = extractTxid(response)
@@ -130,6 +131,8 @@ export async function sendSatsToAddress({ address, amountSats, description }) {
   const response = await client.createAction({
     description: actionDescription,
     outputs,
+    // Use 'wallet payment' protocol so this is covered by manifest grouped permissions
+    labels: ['wallet payment'],
   })
 
   const txid = extractTxid(response)
@@ -165,6 +168,8 @@ export async function sendDonationToHDBot({ amountSats, description }) {
   const response = await client.createAction({
     description: actionDescription,
     outputs,
+    // Use 'wallet payment' protocol so this is covered by manifest grouped permissions
+    labels: ['wallet payment'],
   })
 
   const txid = extractTxid(response)

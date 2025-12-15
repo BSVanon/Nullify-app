@@ -144,6 +144,7 @@ export default function DonateSection({ walletConnected }) {
                 }
                 setAmount(numeric.toLocaleString('en-US'))
               }}
+              onFocus={(event) => event.target.select()}
               className="w-32"
               placeholder="1,000,000"
               disabled={isSending}
