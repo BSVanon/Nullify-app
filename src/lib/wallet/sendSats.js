@@ -138,34 +138,111 @@ export async function sendSatsToAddress({ address, amountSats, description }) {
   return { response, txid }
 }
 
-// Send donation to the Nullify merchant wallet using PeerPay.
-// This uses the same mechanism as Alice→Bob payments so the merchant wallet
-// is notified via MessageBox and can internalize the payment automatically.
+// Nullify merchant paymail address for donations.
+// Paymail provides a standard way to receive payments without requiring
+// the recipient to run any polling service - the payment goes directly on-chain.
+export const NULLIFY_MERCHANT_PAYMAIL = 'nullify@paymail.us'
+
+// Resolve a paymail address to get a P2P payment destination (BRC-28).
+// Returns { outputs: [{ script, satoshis }], reference } or throws on failure.
+async function resolvePaymailDestination(paymail, satoshis) {
+  const [alias, domain] = paymail.split('@')
+  if (!alias || !domain) {
+    throw new Error(`Invalid paymail address: ${paymail}`)
+  }
+
+  console.log('[Paymail] Resolving:', { alias, domain, satoshis })
+
+  // Step 1: Fetch .well-known/bsvalias to discover capabilities
+  const wellKnownUrl = `https://${domain}/.well-known/bsvalias`
+  const wellKnownRes = await fetch(wellKnownUrl)
+  if (!wellKnownRes.ok) {
+    throw new Error(`Failed to fetch paymail capabilities from ${domain}: ${wellKnownRes.status}`)
+  }
+  const capabilities = await wellKnownRes.json()
+  console.log('[Paymail] Capabilities:', capabilities)
+
+  // Step 2: Find P2P Payment Destination capability (2a40af698840)
+  const p2pDestTemplate = capabilities.capabilities?.['2a40af698840']
+  if (!p2pDestTemplate) {
+    throw new Error(`Paymail provider ${domain} does not support P2P Payment Destinations`)
+  }
+
+  // Step 3: Request payment destination
+  const p2pDestUrl = p2pDestTemplate
+    .replace('{alias}', alias)
+    .replace('{domain.tld}', domain)
+
+  console.log('[Paymail] Requesting payment destination from:', p2pDestUrl)
+
+  const destRes = await fetch(p2pDestUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ satoshis }),
+  })
+
+  if (!destRes.ok) {
+    const errText = await destRes.text().catch(() => '')
+    throw new Error(`Failed to get payment destination: ${destRes.status} ${errText}`)
+  }
+
+  const destination = await destRes.json()
+  console.log('[Paymail] Payment destination:', destination)
+
+  // destination should have: { outputs: [{ script, satoshis }], reference }
+  if (!destination.outputs || !Array.isArray(destination.outputs) || destination.outputs.length === 0) {
+    throw new Error('Paymail provider returned invalid payment destination')
+  }
+
+  return destination
+}
+
+// Send donation to the Nullify merchant wallet using Paymail.
+// This sends a direct on-chain payment that the merchant wallet will discover
+// when scanning UTXOs - no MessageBox polling or internalizeAction required.
 export async function sendDonation({ amountSats, description }) {
   const amount = Number(amountSats)
   if (!Number.isFinite(amount) || !Number.isInteger(amount) || amount <= 0) {
     throw new Error('Amount must be a positive integer number of sats')
   }
 
-  // Import the merchant identity key from donationFee.js
-  const { NULLIFY_MERCHANT_IDENTITY_KEY } = await import('./donationFee.js')
-
-  // Use PeerPay to send the donation - this notifies the merchant wallet
-  // via MessageBox so it can internalize the payment automatically
-  await sendPeerPaySatsToIdentityKey({
-    identityKey: NULLIFY_MERCHANT_IDENTITY_KEY,
-    amountSats: amount,
-    originator: typeof window !== 'undefined' ? window.location?.origin : undefined,
+  console.log('[Donation] Sending via paymail:', {
+    paymail: NULLIFY_MERCHANT_PAYMAIL,
+    amount,
   })
 
-  // PeerPay doesn't return txid directly, but the payment is sent
-  return { response: { status: 'sent' }, txid: null }
+  // Resolve paymail to get payment destination (BRC-28)
+  const destination = await resolvePaymailDestination(NULLIFY_MERCHANT_PAYMAIL, amount)
+
+  const { client } = await getWallet()
+
+  // Build outputs from paymail destination
+  const outputs = destination.outputs.map(out => ({
+    satoshis: out.satoshis,
+    lockingScript: out.script,
+    outputDescription: 'Nullify donation',
+  }))
+
+  console.log('[Donation] Creating action with outputs:', outputs)
+
+  const result = await client.createAction({
+    description: description || 'Nullify donation',
+    outputs,
+    labels: ['donation', 'nullify'],
+    options: {
+      randomizeOutputs: false,
+    },
+  })
+
+  console.log('[Donation] Payment sent:', result)
+
+  const txid = extractTxid(result)
+  return { response: { status: 'sent' }, txid }
 }
 
-// Legacy PeerPay-based sats send - kept for backwards compatibility but deprecated.
-// Uses Babbage MessageBox + BRC-29 derivation so the recipient's BRC-100 wallet
-// can internalize the payment without going through Legacy Bridge.
-// @deprecated Use sendDonation or sendSatsToIdentityKey instead.
+// PeerPay-based sats send using Babbage MessageBox + BRC-29 derivation.
+// The recipient's BRC-100 wallet can internalize the payment.
+// NOTE: Recipient must have an app actively polling MessageBox to receive!
 export async function sendPeerPaySatsToIdentityKey({ identityKey, amountSats, originator }) {
   if (!identityKey || typeof identityKey !== 'string') {
     throw new Error('Recipient identity key is required')
@@ -176,11 +253,18 @@ export async function sendPeerPaySatsToIdentityKey({ identityKey, amountSats, or
     throw new Error('Amount must be a positive integer number of sats')
   }
 
+  console.log('[PeerPay] Sending payment:', {
+    recipient: identityKey.slice(0, 16) + '...',
+    amount,
+  })
+
   const { client } = await getWallet()
   const walletClient = client
 
   const derivedOriginator =
     originator || (typeof window !== 'undefined' && window.location?.origin) || undefined
+
+  console.log('[PeerPay] Creating PeerPayClient with originator:', derivedOriginator)
 
   const peerPay = new PeerPayClient({
     walletClient,
@@ -188,13 +272,18 @@ export async function sendPeerPaySatsToIdentityKey({ identityKey, amountSats, or
     originator: derivedOriginator,
   })
 
-  await peerPay.sendLivePayment({
+  console.log('[PeerPay] Calling sendLivePayment...')
+  
+  const result = await peerPay.sendLivePayment({
     recipient: identityKey,
     amount,
   })
 
+  console.log('[PeerPay] sendLivePayment completed:', result)
+
   // PeerPayClient does not currently expose txid directly; the wallet will
   // show the outgoing payment and the peer can internalize it into their wallet.
+  return result
 }
 
 // Start a PeerPay listener that automatically accepts incoming payments into the
