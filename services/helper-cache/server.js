@@ -270,6 +270,60 @@ app.delete('/cache/:id', async (req, res) => {
   }
 });
 
+// Paymail proxy - resolves paymail addresses to payment destinations (avoids CORS)
+app.post('/paymail/resolve', async (req, res) => {
+  try {
+    const { paymail, satoshis } = req.body;
+    if (!paymail || typeof paymail !== 'string' || !paymail.includes('@')) {
+      return res.status(400).json({ error: 'Invalid paymail address' });
+    }
+    if (!satoshis || typeof satoshis !== 'number' || satoshis <= 0) {
+      return res.status(400).json({ error: 'Invalid satoshis amount' });
+    }
+
+    const [alias, domain] = paymail.split('@');
+    console.log(`[helper-cache] Resolving paymail: ${paymail} for ${satoshis} sats`);
+
+    // Step 1: Fetch .well-known/bsvalias
+    const wellKnownUrl = `https://${domain}/.well-known/bsvalias`;
+    const wellKnownRes = await fetch(wellKnownUrl);
+    if (!wellKnownRes.ok) {
+      return res.status(502).json({ error: `Failed to fetch paymail capabilities from ${domain}` });
+    }
+    const capabilities = await wellKnownRes.json();
+
+    // Step 2: Find P2P Payment Destination capability
+    const p2pDestTemplate = capabilities.capabilities?.['2a40af698840'];
+    if (!p2pDestTemplate) {
+      return res.status(502).json({ error: `Paymail provider ${domain} does not support P2P Payment Destinations` });
+    }
+
+    // Step 3: Request payment destination
+    const p2pDestUrl = p2pDestTemplate
+      .replace('{alias}', alias)
+      .replace('{domain.tld}', domain);
+
+    const destRes = await fetch(p2pDestUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ satoshis }),
+    });
+
+    if (!destRes.ok) {
+      const errText = await destRes.text().catch(() => '');
+      return res.status(502).json({ error: `Failed to get payment destination: ${destRes.status} ${errText}` });
+    }
+
+    const destination = await destRes.json();
+    console.log(`[helper-cache] Paymail resolved: ${paymail} -> ${destination.outputs?.length || 0} outputs`);
+
+    res.json(destination);
+  } catch (err) {
+    console.error('[helper-cache] Paymail resolve error:', err);
+    res.status(500).json({ error: 'Failed to resolve paymail' });
+  }
+});
+
 // Prune expired entries
 app.post('/cache/prune', async (req, res) => {
   try {

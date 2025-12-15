@@ -144,49 +144,29 @@ export async function sendSatsToAddress({ address, amountSats, description }) {
 export const NULLIFY_MERCHANT_PAYMAIL = 'nullify@paymail.us'
 
 // Resolve a paymail address to get a P2P payment destination (BRC-28).
+// Uses helper-cache proxy to avoid CORS issues with paymail providers.
 // Returns { outputs: [{ script, satoshis }], reference } or throws on failure.
 async function resolvePaymailDestination(paymail, satoshis) {
-  const [alias, domain] = paymail.split('@')
-  if (!alias || !domain) {
+  if (!paymail || !paymail.includes('@')) {
     throw new Error(`Invalid paymail address: ${paymail}`)
   }
 
-  console.log('[Paymail] Resolving:', { alias, domain, satoshis })
+  console.log('[Paymail] Resolving via proxy:', { paymail, satoshis })
 
-  // Step 1: Fetch .well-known/bsvalias to discover capabilities
-  const wellKnownUrl = `https://${domain}/.well-known/bsvalias`
-  const wellKnownRes = await fetch(wellKnownUrl)
-  if (!wellKnownRes.ok) {
-    throw new Error(`Failed to fetch paymail capabilities from ${domain}: ${wellKnownRes.status}`)
-  }
-  const capabilities = await wellKnownRes.json()
-  console.log('[Paymail] Capabilities:', capabilities)
-
-  // Step 2: Find P2P Payment Destination capability (2a40af698840)
-  const p2pDestTemplate = capabilities.capabilities?.['2a40af698840']
-  if (!p2pDestTemplate) {
-    throw new Error(`Paymail provider ${domain} does not support P2P Payment Destinations`)
-  }
-
-  // Step 3: Request payment destination
-  const p2pDestUrl = p2pDestTemplate
-    .replace('{alias}', alias)
-    .replace('{domain.tld}', domain)
-
-  console.log('[Paymail] Requesting payment destination from:', p2pDestUrl)
-
-  const destRes = await fetch(p2pDestUrl, {
+  // Use helper-cache proxy to avoid CORS
+  const proxyUrl = 'https://cache.nullify.onl/paymail/resolve'
+  const res = await fetch(proxyUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ satoshis }),
+    body: JSON.stringify({ paymail, satoshis }),
   })
 
-  if (!destRes.ok) {
-    const errText = await destRes.text().catch(() => '')
-    throw new Error(`Failed to get payment destination: ${destRes.status} ${errText}`)
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}))
+    throw new Error(errData.error || `Failed to resolve paymail: ${res.status}`)
   }
 
-  const destination = await destRes.json()
+  const destination = await res.json()
   console.log('[Paymail] Payment destination:', destination)
 
   // destination should have: { outputs: [{ script, satoshis }], reference }
