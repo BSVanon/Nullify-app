@@ -58,7 +58,9 @@ export default function DonateSection({ walletConnected }) {
       
       addNotification({
         type: 'success',
-        message: `Donation sent! Transaction: ${result.txid?.slice(0, 12)}...`,
+        message: result.txid 
+          ? `Donation sent! Transaction: ${result.txid.slice(0, 12)}...`
+          : 'Donation sent! The merchant wallet will receive it shortly.',
         duration: 8000,
       })
     } catch (error) {

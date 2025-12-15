@@ -2,7 +2,6 @@ import { CONFIG } from '../config.js'
 import { getWallet, extractTxid } from './client.js'
 import { PublicKey, P2PKH } from '@bsv/sdk'
 import { PeerPayClient } from '@bsv/message-box-client'
-import { buildDonationOutput } from './donationFee.js'
 
 // Lightweight MessageBox / PeerPay health publisher for diagnostics.
 // This avoids any coupling between diagnostics and the payment logic
@@ -139,42 +138,28 @@ export async function sendSatsToAddress({ address, amountSats, description }) {
   return { response, txid }
 }
 
-// Send donation directly to the Nullify merchant wallet.
-// Uses the same P2PKH mechanism as regular wallet-to-wallet payments.
+// Send donation to the Nullify merchant wallet using PeerPay.
+// This uses the same mechanism as Alice→Bob payments so the merchant wallet
+// is notified via MessageBox and can internalize the payment automatically.
 export async function sendDonation({ amountSats, description }) {
   const amount = Number(amountSats)
   if (!Number.isFinite(amount) || !Number.isInteger(amount) || amount <= 0) {
     throw new Error('Amount must be a positive integer number of sats')
   }
 
-  const { client } = await getWallet()
+  // Import the merchant identity key from donationFee.js
+  const { NULLIFY_MERCHANT_IDENTITY_KEY } = await import('./donationFee.js')
 
-  // Build donation output to merchant identity key
-  const donationOutput = buildDonationOutput(amount)
-  if (!donationOutput) {
-    throw new Error('Failed to build donation output')
-  }
-
-  const outputs = [
-    {
-      satoshis: donationOutput.satoshis,
-      lockingScript: donationOutput.lockingScript,
-      outputDescription: 'Nullify donation',
-    },
-  ]
-
-  const actionDescription = description || `Nullify donation (${amount} sats)`
-
-  const response = await client.createAction({
-    description: actionDescription,
-    outputs,
-    // Use 'wallet payment' protocol so this is covered by manifest grouped permissions
-    labels: ['wallet payment'],
+  // Use PeerPay to send the donation - this notifies the merchant wallet
+  // via MessageBox so it can internalize the payment automatically
+  await sendPeerPaySatsToIdentityKey({
+    identityKey: NULLIFY_MERCHANT_IDENTITY_KEY,
+    amountSats: amount,
+    originator: typeof window !== 'undefined' ? window.location?.origin : undefined,
   })
 
-  const txid = extractTxid(response)
-
-  return { response, txid }
+  // PeerPay doesn't return txid directly, but the payment is sent
+  return { response: { status: 'sent' }, txid: null }
 }
 
 // Legacy PeerPay-based sats send - kept for backwards compatibility but deprecated.
