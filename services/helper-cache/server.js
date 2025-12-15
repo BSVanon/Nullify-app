@@ -10,7 +10,8 @@ const cors = require('cors');
 const fs = require('fs').promises;
 const path = require('path');
 
-const { initPaymentInvoices } = require('./paymentInvoices');
+// Payment invoice infrastructure removed - donations now go directly to merchant wallet
+// const { initPaymentInvoices } = require('./paymentInvoices');
 
 const app = express();
 const PORT = process.env.PORT || 4100;
@@ -284,7 +285,8 @@ app.post('/cache/prune', async (req, res) => {
 // Start server
 async function start() {
   await initDataDir();
-  await initPaymentInvoices({ app, dataDir: DATA_DIR });
+  // Payment invoice infrastructure removed - donations now go directly to merchant wallet
+  // await initPaymentInvoices({ app, dataDir: DATA_DIR });
 
   // Auto-prune every hour
   setInterval(async () => {

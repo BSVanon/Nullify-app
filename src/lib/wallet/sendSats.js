@@ -2,7 +2,7 @@ import { CONFIG } from '../config.js'
 import { getWallet, extractTxid } from './client.js'
 import { PublicKey, P2PKH } from '@bsv/sdk'
 import { PeerPayClient } from '@bsv/message-box-client'
-import { buildDonationOutput, clearInvoiceCache } from './donationFee.js'
+import { buildDonationOutput } from './donationFee.js'
 
 // Lightweight MessageBox / PeerPay health publisher for diagnostics.
 // This avoids any coupling between diagnostics and the payment logic
@@ -139,9 +139,9 @@ export async function sendSatsToAddress({ address, amountSats, description }) {
   return { response, txid }
 }
 
-// Send donation to HD-derived address from the helper-cache-server.
-// The server monitors these addresses for incoming payments.
-export async function sendDonationToHDBot({ amountSats, description }) {
+// Send donation directly to the Nullify merchant wallet.
+// Uses the same P2PKH mechanism as regular wallet-to-wallet payments.
+export async function sendDonation({ amountSats, description }) {
   const amount = Number(amountSats)
   if (!Number.isFinite(amount) || !Number.isInteger(amount) || amount <= 0) {
     throw new Error('Amount must be a positive integer number of sats')
@@ -149,10 +149,10 @@ export async function sendDonationToHDBot({ amountSats, description }) {
 
   const { client } = await getWallet()
 
-  // Get a fresh HD-derived address from the server
-  const donationOutput = await buildDonationOutput(amount)
+  // Build donation output to merchant identity key
+  const donationOutput = buildDonationOutput(amount)
   if (!donationOutput) {
-    throw new Error('Failed to get donation address from server. Is HELPER_CACHE_ENDPOINT configured?')
+    throw new Error('Failed to build donation output')
   }
 
   const outputs = [
@@ -174,16 +174,13 @@ export async function sendDonationToHDBot({ amountSats, description }) {
 
   const txid = extractTxid(response)
 
-  // Clear invoice cache so next donation gets a fresh address
-  clearInvoiceCache()
-
-  return { response, txid, invoiceId: donationOutput.invoiceId }
+  return { response, txid }
 }
 
 // Legacy PeerPay-based sats send - kept for backwards compatibility but deprecated.
 // Uses Babbage MessageBox + BRC-29 derivation so the recipient's BRC-100 wallet
 // can internalize the payment without going through Legacy Bridge.
-// @deprecated Use sendDonationToHDBot instead for donations.
+// @deprecated Use sendDonation or sendSatsToIdentityKey instead.
 export async function sendPeerPaySatsToIdentityKey({ identityKey, amountSats, originator }) {
   if (!identityKey || typeof identityKey !== 'string') {
     throw new Error('Recipient identity key is required')

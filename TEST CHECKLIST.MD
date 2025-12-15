@@ -22,3 +22,21 @@ MVP Pre-Launch Checklist
 15	Typing indicators	Optional feature
 16	Read receipts	Optional feature
 17	Contact management	Can add/remove contacts
+
+
+
+
+
+
+Group permissions should have included all these extra permissions needed to send payments to other Nullify users or recently upgraded guests.
+
+We need better error fails for users trying to upgrade
+
+Safety number verifications failed!!
+
+
+entering a donation in custom field doesn't overwrite the 1,000,000 default but just adds to it.
+
+first time users only see invite message
+
+Wallet holding initial invite - set nickname but stayed in hidden guest section of contacts.

@@ -4,17 +4,13 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useNotification } from '@/contexts/NotificationContext.jsx'
-import { CONFIG } from '@/lib/config.js'
-import { sendDonationToHDBot } from '@/lib/wallet/sendSats.js'
+import { sendDonation } from '@/lib/wallet/sendSats.js'
 import { formatErrorForNotification } from '@/lib/errors/userFriendlyErrors.js'
 
 export default function DonateSection({ walletConnected }) {
   const { addNotification } = useNotification()
   const [amount, setAmount] = useState('1,000,000')
   const [isSending, setIsSending] = useState(false)
-
-  const helperCacheEndpoint = CONFIG.HELPER_CACHE_ENDPOINT || ''
-  const hasDonationEndpoint = typeof helperCacheEndpoint === 'string' && helperCacheEndpoint.length > 0
 
   const PRESET_AMOUNTS = [
     { value: 10000, label: '10K sats' },
@@ -27,15 +23,6 @@ export default function DonateSection({ walletConnected }) {
       addNotification({
         type: 'error',
         message: 'Connect a BRC-100 compatible wallet to send a donation.',
-        duration: 6000,
-      })
-      return
-    }
-
-    if (!hasDonationEndpoint) {
-      addNotification({
-        type: 'error',
-        message: 'Donation server is not configured.',
         duration: 6000,
       })
       return
@@ -64,7 +51,7 @@ export default function DonateSection({ walletConnected }) {
         duration: 8000,
       })
 
-      const result = await sendDonationToHDBot({
+      const result = await sendDonation({
         amountSats: value,
         description: `Nullify donation (${value.toLocaleString()} sats)`,
       })
@@ -96,17 +83,9 @@ export default function DonateSection({ walletConnected }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 text-sm text-muted-foreground">
-        {!hasDonationEndpoint && (
-          <p className="text-xs text-amber-500">
-            Donation server is not configured. Set VITE_HELPER_CACHE_ENDPOINT in your environment to enable this.
-          </p>
-        )}
-
-        {hasDonationEndpoint && (
-          <p>
-            Each donation is sent to a newly generated address.
-          </p>
-        )}
+        <p>
+          Donations go directly to the Nullify developer wallet using the same secure payment flow as sending sats to any contact.
+        </p>
 
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground/80">Quick amounts</p>
@@ -117,7 +96,7 @@ export default function DonateSection({ walletConnected }) {
                 size="sm"
                 variant="outline"
                 onClick={() => handleSend(preset.value)}
-                disabled={isSending || !hasDonationEndpoint}
+                disabled={isSending}
                 className="h-auto flex-col gap-0.5 py-2"
               >
                 <span className="text-xs font-semibold">{preset.label}</span>
@@ -150,13 +129,11 @@ export default function DonateSection({ walletConnected }) {
               disabled={isSending}
             />
             <span className="text-xs text-muted-foreground/80">sats</span>
-            <Button size="sm" onClick={() => handleSend()} disabled={isSending || !hasDonationEndpoint}>
+            <Button size="sm" onClick={() => handleSend()} disabled={isSending}>
               {isSending ? 'Sending…' : 'Send donation'}
             </Button>
           </div>
         </div>
-
-        {hasDonationEndpoint && null}
       </CardContent>
     </Card>
   )
