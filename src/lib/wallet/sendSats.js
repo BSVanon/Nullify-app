@@ -143,6 +143,12 @@ export async function sendSatsToAddress({ address, amountSats, description }) {
 // the recipient to run any polling service - the payment goes directly on-chain.
 export const NULLIFY_MERCHANT_PAYMAIL = 'nullify@paymail.us'
 
+function getHelperCacheBaseUrl() {
+  const base = (CONFIG.HELPER_CACHE_ENDPOINT || '').trim()
+  if (!base) return ''
+  return base.endsWith('/') ? base.slice(0, -1) : base
+}
+
 // Resolve a paymail address to get a P2P payment destination (BRC-28).
 // Uses helper-cache proxy to avoid CORS issues with paymail providers.
 // Returns { outputs: [{ script, satoshis }], reference } or throws on failure.
@@ -154,7 +160,9 @@ async function resolvePaymailDestination(paymail, satoshis) {
   console.log('[Paymail] Resolving via proxy:', { paymail, satoshis })
 
   // Use helper-cache proxy to avoid CORS
-  const proxyUrl = 'https://cache.nullify.onl/paymail/resolve'
+  const base = getHelperCacheBaseUrl()
+  if (!base) throw new Error('Helper cache endpoint not configured')
+  const proxyUrl = `${base}/paymail/resolve`
   const res = await fetch(proxyUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -184,7 +192,9 @@ async function submitPaymailTransaction({ paymail, reference, hex, metadata }) {
     hexPreview: typeof hex === 'string' ? `${hex.slice(0, 16)}...` : null,
   })
 
-  const proxyUrl = 'https://cache.nullify.onl/paymail/submit'
+  const base = getHelperCacheBaseUrl()
+  if (!base) throw new Error('Helper cache endpoint not configured')
+  const proxyUrl = `${base}/paymail/submit`
   const res = await fetch(proxyUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -230,6 +240,19 @@ function base64ToBytes(value) {
   return null
 }
 
+function hexToBytes(value) {
+  if (typeof value !== 'string') return null
+  const clean = value.trim()
+  if (!clean) return null
+  if (!/^[0-9a-fA-F]+$/.test(clean) || clean.length % 2 !== 0) return null
+
+  const bytes = new Array(clean.length / 2)
+  for (let i = 0; i < clean.length; i += 2) {
+    bytes[i / 2] = parseInt(clean.slice(i, i + 2), 16)
+  }
+  return bytes
+}
+
 function extractAtomicBeef(res) {
   if (!res || typeof res !== 'object') return null
   return (
@@ -245,16 +268,37 @@ function atomicBeefToRawTxHex(atomicBeef) {
   if (!atomicBeef) return null
 
   let bytes = null
-  if (Array.isArray(atomicBeef)) {
+  if (atomicBeef instanceof Uint8Array) {
+    bytes = Array.from(atomicBeef)
+  } else if (Array.isArray(atomicBeef)) {
     bytes = atomicBeef
   } else if (typeof atomicBeef === 'string') {
-    bytes = base64ToBytes(atomicBeef)
+    bytes = hexToBytes(atomicBeef) || base64ToBytes(atomicBeef)
+  } else if (typeof atomicBeef === 'object') {
+    const nested = atomicBeef?.data || atomicBeef?.raw || atomicBeef?.beef || atomicBeef?.tx || null
+    if (nested instanceof Uint8Array) {
+      bytes = Array.from(nested)
+    } else if (Array.isArray(nested)) {
+      bytes = nested
+    } else if (typeof nested === 'string') {
+      bytes = hexToBytes(nested) || base64ToBytes(nested)
+    }
   }
 
   if (!bytes) return null
 
-  const tx = Transaction.fromAtomicBEEF(bytes)
-  return tx.toHex()
+  try {
+    const tx = Transaction.fromBEEF(bytes)
+    return tx.toHex()
+  } catch (err) {
+    try {
+      const tx = Transaction.fromAtomicBEEF(bytes)
+      return tx.toHex()
+    } catch {
+      const tx = Transaction.fromBinary(bytes)
+      return tx.toHex()
+    }
+  }
 }
 
 // Send donation to the Nullify merchant wallet using Paymail.
