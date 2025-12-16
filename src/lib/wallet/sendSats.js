@@ -1,6 +1,5 @@
 import { CONFIG } from '../config.js'
 import { getWallet, extractTxid } from './client.js'
-import { getPublicKey, createSignature } from './jsonApiClient.js'
 import { PublicKey, P2PKH, Transaction } from '@bsv/sdk'
 import { PeerPayClient } from '@bsv/message-box-client'
 import { NULLIFY_MERCHANT_PAYMAIL, resolvePaymailDestination, submitPaymailTransaction } from './paymail.js'
@@ -93,9 +92,6 @@ export async function sendDonation({ amountSats, description }) {
 
   const txid = extractTxid(result)
 
-  const pubkey = await getPublicKey()
-  const signature = await createSignature({ data: txid })
-
   let rawTxHex =
     result?.rawTx ||
     result?.result?.rawTx ||
@@ -118,8 +114,6 @@ export async function sendDonation({ amountSats, description }) {
         hex: rawTxHex,
         metadata: {
           note: description || 'Nullify donation',
-          pubkey,
-          signature,
         },
       })
     } catch (err) {
