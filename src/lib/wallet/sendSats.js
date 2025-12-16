@@ -1,6 +1,6 @@
 import { CONFIG } from '../config.js'
-import { getWallet, extractTxid, getPublicKey } from './client.js'
-import { createSignature } from './jsonApiClient.js'
+import { getWallet, extractTxid } from './client.js'
+import { getPublicKey, createSignature } from './jsonApiClient.js'
 import { PublicKey, P2PKH, Transaction } from '@bsv/sdk'
 import { PeerPayClient } from '@bsv/message-box-client'
 import { NULLIFY_MERCHANT_PAYMAIL, resolvePaymailDestination, submitPaymailTransaction } from './paymail.js'
