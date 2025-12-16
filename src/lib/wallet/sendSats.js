@@ -1,6 +1,6 @@
 import { CONFIG } from '../config.js'
 import { getWallet, extractTxid } from './client.js'
-import { PublicKey, P2PKH } from '@bsv/sdk'
+import { PublicKey, P2PKH, Transaction } from '@bsv/sdk'
 import { PeerPayClient } from '@bsv/message-box-client'
 
 // Lightweight MessageBox / PeerPay health publisher for diagnostics.
@@ -177,6 +177,86 @@ async function resolvePaymailDestination(paymail, satoshis) {
   return destination
 }
 
+async function submitPaymailTransaction({ paymail, reference, hex, metadata }) {
+  console.log('[Paymail] Submitting transaction via proxy:', {
+    paymail,
+    reference,
+    hexPreview: typeof hex === 'string' ? `${hex.slice(0, 16)}...` : null,
+  })
+
+  const proxyUrl = 'https://cache.nullify.onl/paymail/submit'
+  const res = await fetch(proxyUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ paymail, reference, hex, metadata }),
+  })
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}))
+    throw new Error(errData.error || `Failed to submit paymail transaction: ${res.status}`)
+  }
+
+  const response = await res.json().catch(() => ({}))
+  console.log('[Paymail] Submit response:', response)
+  return response
+}
+
+function base64ToBytes(value) {
+  if (typeof value !== 'string') return null
+
+  try {
+    if (typeof atob === 'function') {
+      const bin = atob(value)
+      const bytes = new Array(bin.length)
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+      return bytes
+    }
+  } catch {
+    // fall through
+  }
+
+  try {
+    if (
+      typeof globalThis !== 'undefined' &&
+      globalThis.Buffer &&
+      typeof globalThis.Buffer.from === 'function'
+    ) {
+      return Array.from(globalThis.Buffer.from(value, 'base64'))
+    }
+  } catch {
+    // fall through
+  }
+
+  return null
+}
+
+function extractAtomicBeef(res) {
+  if (!res || typeof res !== 'object') return null
+  return (
+    res.tx ||
+    res?.signableTransaction?.tx ||
+    res?.result?.tx ||
+    res?.result?.signableTransaction?.tx ||
+    null
+  )
+}
+
+function atomicBeefToRawTxHex(atomicBeef) {
+  if (!atomicBeef) return null
+
+  let bytes = null
+  if (Array.isArray(atomicBeef)) {
+    bytes = atomicBeef
+  } else if (typeof atomicBeef === 'string') {
+    bytes = base64ToBytes(atomicBeef)
+  }
+
+  if (!bytes) return null
+
+  const tx = Transaction.fromAtomicBEEF(bytes)
+  return tx.toHex()
+}
+
 // Send donation to the Nullify merchant wallet using Paymail.
 // This sends a direct on-chain payment that the merchant wallet will discover
 // when scanning UTXOs - no MessageBox polling or internalizeAction required.
@@ -208,16 +288,52 @@ export async function sendDonation({ amountSats, description }) {
   const result = await client.createAction({
     description: description || 'Nullify donation',
     outputs,
-    labels: ['donation', 'nullify'],
+    // Use 'wallet payment' protocol so this is covered by manifest grouped permissions
+    labels: ['wallet payment', 'donation', 'nullify'],
     options: {
       randomizeOutputs: false,
+      returnTXIDOnly: false,
     },
   })
 
   console.log('[Donation] Payment sent:', result)
 
   const txid = extractTxid(result)
-  return { response: { status: 'sent' }, txid }
+
+  let rawTxHex =
+    result?.rawTx ||
+    result?.result?.rawTx ||
+    null
+
+  if (!rawTxHex) {
+    const atomicBeef = extractAtomicBeef(result)
+    try {
+      rawTxHex = atomicBeefToRawTxHex(atomicBeef)
+    } catch (err) {
+      console.warn('[Donation] Failed to convert AtomicBEEF to raw tx hex:', err)
+    }
+  }
+
+  if (destination?.reference && rawTxHex) {
+    try {
+      await submitPaymailTransaction({
+        paymail: NULLIFY_MERCHANT_PAYMAIL,
+        reference: destination.reference,
+        hex: rawTxHex,
+        metadata: {
+          note: description || 'Nullify donation',
+        },
+      })
+    } catch (err) {
+      console.warn('[Donation] Paymail submission failed (tx was still created):', err)
+      return { response: { status: 'sent', paymail: 'submit_failed' }, txid }
+    }
+
+    return { response: { status: 'sent', paymail: 'submitted' }, txid }
+  }
+
+  console.warn('[Donation] No paymail reference or raw tx available; skipping paymail submit step')
+  return { response: { status: 'sent', paymail: 'not_submitted' }, txid }
 }
 
 // PeerPay-based sats send using Babbage MessageBox + BRC-29 derivation.

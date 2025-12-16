@@ -46,8 +46,8 @@ export default function DonateSection({ walletConnected }) {
     setIsSending(true)
     try {
       addNotification({
-        type: 'success',
-        message: 'Bitcoin payment created. Your wallet will ask for confirmation.',
+        type: 'info',
+        message: 'Preparing donation… Your wallet will ask for confirmation.',
         duration: 8000,
       })
 
@@ -55,12 +55,34 @@ export default function DonateSection({ walletConnected }) {
         amountSats: value,
         description: `Nullify donation (${value.toLocaleString()} sats)`,
       })
+
+      const paymailStatus = result?.response?.paymail
+
+      let message
+      let type = 'success'
+      if (result.txid) {
+        if (paymailStatus === 'submitted') {
+          message = `Donation sent! Transaction: ${result.txid.slice(0, 12)}... (paymail notified)`
+        } else if (paymailStatus === 'submit_failed') {
+          type = 'warning'
+          message = `Donation sent! Transaction: ${result.txid.slice(0, 12)}... (paymail notify failed)`
+        } else {
+          message = `Donation sent! Transaction: ${result.txid.slice(0, 12)}...`
+        }
+      } else {
+        if (paymailStatus === 'submitted') {
+          message = 'Donation sent! (paymail notified)'
+        } else if (paymailStatus === 'submit_failed') {
+          type = 'warning'
+          message = 'Donation sent, but paymail notify failed. The transaction may still confirm on-chain.'
+        } else {
+          message = 'Donation sent! The merchant wallet will receive it shortly.'
+        }
+      }
       
       addNotification({
-        type: 'success',
-        message: result.txid 
-          ? `Donation sent! Transaction: ${result.txid.slice(0, 12)}...`
-          : 'Donation sent! The merchant wallet will receive it shortly.',
+        type,
+        message,
         duration: 8000,
       })
     } catch (error) {

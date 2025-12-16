@@ -324,6 +324,68 @@ app.post('/paymail/resolve', async (req, res) => {
   }
 });
 
+ // Paymail proxy - submits a raw transaction to the paymail provider (BRC-28 P2P Transactions)
+ app.post('/paymail/submit', async (req, res) => {
+   try {
+     const { paymail, reference, hex, metadata } = req.body;
+     if (!paymail || typeof paymail !== 'string' || !paymail.includes('@')) {
+       return res.status(400).json({ error: 'Invalid paymail address' });
+     }
+     if (!reference || typeof reference !== 'string') {
+       return res.status(400).json({ error: 'Invalid reference' });
+     }
+     if (!hex || typeof hex !== 'string') {
+       return res.status(400).json({ error: 'Invalid transaction hex' });
+     }
+
+     const [alias, domain] = paymail.split('@');
+     console.log(`[helper-cache] Submitting paymail transaction: ${paymail} (ref=${reference})`);
+
+     const wellKnownUrl = `https://${domain}/.well-known/bsvalias`;
+     const wellKnownRes = await fetch(wellKnownUrl);
+     if (!wellKnownRes.ok) {
+       return res.status(502).json({ error: `Failed to fetch paymail capabilities from ${domain}` });
+     }
+     const capabilities = await wellKnownRes.json();
+
+     const p2pTxTemplate = capabilities.capabilities?.['5f1323cddf31'];
+     if (!p2pTxTemplate) {
+       return res.status(502).json({ error: `Paymail provider ${domain} does not support P2P Transactions` });
+     }
+
+     const p2pTxUrl = p2pTxTemplate
+       .replace('{alias}', alias)
+       .replace('{domain.tld}', domain);
+
+     const txBody = {
+       hex,
+       reference,
+     };
+     if (metadata && typeof metadata === 'object') {
+       txBody.metadata = metadata;
+     }
+
+     const txRes = await fetch(p2pTxUrl, {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify(txBody),
+     });
+
+     if (!txRes.ok) {
+       const errText = await txRes.text().catch(() => '');
+       return res.status(502).json({ error: `Failed to submit paymail transaction: ${txRes.status} ${errText}` });
+     }
+
+     const txResponse = await txRes.json().catch(() => ({}));
+     console.log(`[helper-cache] Paymail tx accepted: ${paymail} -> ${txResponse.txid || 'unknown txid'}`);
+
+     res.json(txResponse);
+   } catch (err) {
+     console.error('[helper-cache] Paymail submit error:', err);
+     res.status(500).json({ error: 'Failed to submit paymail transaction' });
+   }
+ });
+
 // Prune expired entries
 app.post('/cache/prune', async (req, res) => {
   try {
