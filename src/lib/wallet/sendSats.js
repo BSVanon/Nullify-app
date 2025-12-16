@@ -44,13 +44,6 @@ function publishMessageBoxHealth(partial) {
 
 
 
-
-
-
-
-// Send donation to the Nullify merchant wallet using Paymail.
-// This sends a direct on-chain payment that the merchant wallet will discover
-// when scanning UTXOs - no MessageBox polling or internalizeAction required.
 export async function sendDonation({ amountSats, description }) {
   const amount = Number(amountSats)
   if (!Number.isFinite(amount) || !Number.isInteger(amount) || amount <= 0) {
@@ -84,7 +77,6 @@ export async function sendDonation({ amountSats, description }) {
     options: {
       randomizeOutputs: false,
       returnTXIDOnly: false,
-      noSend: true,
     },
   })
 
@@ -92,40 +84,7 @@ export async function sendDonation({ amountSats, description }) {
 
   const txid = extractTxid(result)
 
-  let rawTxHex =
-    result?.rawTx ||
-    result?.result?.rawTx ||
-    null
-
-  if (!rawTxHex) {
-    const atomicBeef = extractAtomicBeef(result)
-    try {
-      rawTxHex = atomicBeefToRawTxHex(atomicBeef)
-    } catch (err) {
-      console.warn('[Donation] Failed to convert AtomicBEEF to raw tx hex:', err)
-    }
-  }
-
-  if (destination?.reference && rawTxHex) {
-    try {
-      await submitPaymailTransaction({
-        paymail: NULLIFY_MERCHANT_PAYMAIL,
-        reference: destination.reference,
-        hex: rawTxHex,
-        metadata: {
-          note: description || 'Nullify donation',
-        },
-      })
-    } catch (err) {
-      console.warn('[Donation] Paymail submission failed (tx was still created):', err)
-      return { response: { status: 'sent', paymail: 'submit_failed' }, txid }
-    }
-
-    return { response: { status: 'sent', paymail: 'submitted' }, txid }
-  }
-
-  console.warn('[Donation] No paymail reference or raw tx available; skipping paymail submit step')
-  return { response: { status: 'sent', paymail: 'not_submitted' }, txid }
+  return { response: { status: 'sent' }, txid }
 }
 
 // PeerPay-based sats send using Babbage MessageBox + BRC-29 derivation.
