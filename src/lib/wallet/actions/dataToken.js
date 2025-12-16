@@ -7,6 +7,7 @@ import { mapLockingScriptsToIndexes } from '../transactionOutputs.js';
 import { base64ToUint8 } from '../keyManagement.js';
 import { wrapKeyWithECIES } from '../../crypto/keyWrapping.js';
 import { buildDonationOutput, clearInvoiceCache } from '../donationFee.js';
+import { ensureBroadcast } from '../broadcast.js';
 
 export async function mintDataTokens({
   ctTxid,
@@ -109,6 +110,22 @@ export async function mintDataTokens({
       response.txid = txid;
     } catch (assignErr) {
       console.debug('Unable to assign txid on data token response', assignErr);
+    }
+  }
+
+  // Manual broadcast fallback if wallet broadcast is stuck in "sending" state
+  const sendStatus = response?.sendWithResults?.[0]?.status;
+  if (txid && sendStatus === 'sending') {
+    console.log('[mintDataTokens] Wallet broadcast pending, attempting manual broadcast...');
+    try {
+      const broadcastResult = await ensureBroadcast(response, txid);
+      if (broadcastResult.broadcasted) {
+        console.log('[mintDataTokens] Manual broadcast succeeded via', broadcastResult.endpoint || 'wallet');
+      } else {
+        console.warn('[mintDataTokens] Manual broadcast failed:', broadcastResult.error);
+      }
+    } catch (err) {
+      console.warn('[mintDataTokens] Manual broadcast error:', err);
     }
   }
 
