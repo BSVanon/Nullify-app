@@ -5,6 +5,7 @@ import { PeerPayClient } from '@bsv/message-box-client'
 import { NULLIFY_MERCHANT_PAYMAIL, resolvePaymailDestination, submitPaymailTransaction } from './paymail.js'
 import { extractAtomicBeef, atomicBeefToRawTxHex } from './txExtract.js'
 import { sendSatsToIdentityKey, sendSatsToAddress } from './sendUtils.js'
+import { buildDonationOutput, clearInvoiceCache } from './donationFee.js'
 
 // Lightweight MessageBox / PeerPay health publisher for diagnostics.
 // This avoids any coupling between diagnostics and the payment logic
@@ -44,35 +45,29 @@ function publishMessageBoxHealth(partial) {
 
 
 
+// Send donation to Nullify using HD-derived address from helper-cache server.
+// Uses the same pattern as CT/DT minting fees.
 export async function sendDonation({ amountSats, description }) {
   const amount = Number(amountSats)
   if (!Number.isFinite(amount) || !Number.isInteger(amount) || amount <= 0) {
     throw new Error('Amount must be a positive integer number of sats')
   }
 
-  console.log('[Donation] Sending via paymail:', {
-    paymail: NULLIFY_MERCHANT_PAYMAIL,
-    amount,
-  })
+  console.log('[Donation] Sending via HD-derived address:', { amount })
 
-  // Resolve paymail to get payment destination (BRC-28)
-  const destination = await resolvePaymailDestination(NULLIFY_MERCHANT_PAYMAIL, amount)
+  // Get HD-derived address from helper-cache server (same as CT/DT minting)
+  const donationOutput = await buildDonationOutput(amount)
+  if (!donationOutput) {
+    throw new Error('Failed to create donation output - helper-cache may be unavailable')
+  }
 
   const { client } = await getWallet()
 
-  // Build outputs from paymail destination
-  const outputs = destination.outputs.map(out => ({
-    satoshis: out.satoshis,
-    lockingScript: out.script,
-    outputDescription: 'Nullify donation',
-  }))
-
-  console.log('[Donation] Creating action with outputs:', outputs)
+  console.log('[Donation] Creating action with output:', donationOutput)
 
   const result = await client.createAction({
     description: description || 'Nullify donation',
-    outputs,
-    // Use 'wallet payment' protocol so this is covered by manifest grouped permissions
+    outputs: [donationOutput],
     labels: ['wallet payment', 'donation', 'nullify'],
     options: {
       randomizeOutputs: false,
@@ -83,6 +78,9 @@ export async function sendDonation({ amountSats, description }) {
   console.log('[Donation] Payment sent:', result)
 
   const txid = extractTxid(result)
+
+  // Clear invoice cache so next transaction gets a fresh address
+  clearInvoiceCache()
 
   return { response: { status: 'sent' }, txid }
 }
