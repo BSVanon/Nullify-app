@@ -64,8 +64,8 @@ export async function mintAtomicCTandDTs({
     });
   }
 
-  // Donation output at index 0 - pays to static merchant address
-  const donationOutput = buildDonationOutput(50);
+  // Donation output at index 0 - HD-invoice with static fallback
+  const donationOutput = await buildDonationOutput(50);
   const actionOutputs = donationOutput ? [donationOutput, ...outputs] : outputs;
 
   const response = await client.createAction({
