@@ -109,8 +109,8 @@ export async function burnControlToken({
   }
 
   // Burn output (provably unspendable)
-  // Donation output at index 0 - server monitors HD-derived address for payment
-  const donationOutput = await buildDonationOutput(50);
+  // Donation output at index 0 - pays to static merchant address
+  const donationOutput = buildDonationOutput(50);
   const outputs = donationOutput ? [
     donationOutput,
     {
