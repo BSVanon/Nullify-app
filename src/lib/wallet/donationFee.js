@@ -1,57 +1,114 @@
-import { P2PKH, PublicKey } from '@bsv/sdk'
+import { P2PKH } from '@bsv/sdk'
 
 import { CONFIG } from '../config.js'
 
-// Nullify merchant identity key - donations go directly to this wallet
-// This is the "Everyday Identity Key" from the Nullify developer's Metanet Desktop wallet
-export const NULLIFY_MERCHANT_IDENTITY_KEY = '0354d78409df288d4eda0ecd8d00419570ee9b73c15d1bb1ed6b1f4ef3d2d047e8'
+// Cache for the current invoice to avoid creating multiple invoices per transaction
+let cachedInvoice = null
+let cachedInvoiceExpiry = 0
+const INVOICE_CACHE_TTL_MS = 30000 // 30 seconds
+
+// Debug logging helper
+const debugLog = (...args) => {
+  if (CONFIG.DEBUG_VERBOSE) {
+    console.log(...args);
+  }
+};
 
 /**
- * Build a donation output that pays directly to the Nullify merchant wallet.
- * Uses the same P2PKH mechanism as regular wallet-to-wallet payments.
+ * Fetch a fresh HD-derived address from the helper-cache-server's invoice endpoint.
+ * This creates a new invoice with a unique address that the server monitors for payment.
  * 
- * @param {number} satoshis - Amount in satoshis (default 50)
- * @returns {Object|null} Output object with lockingScript, or null on failure
+ * @param {number} satoshis - Amount in satoshis
+ * @param {string} [memo] - Optional memo for the invoice
+ * @returns {Promise<{address: string, invoiceId: string}|null>} Invoice details or null on failure
  */
-export function buildDonationOutput(satoshis = 50) {
-  if (!Number.isFinite(satoshis) || !Number.isInteger(satoshis) || satoshis <= 0) {
+async function fetchInvoiceAddress(satoshis, memo = 'Nullify fee') {
+  const helperCacheEndpoint = CONFIG.HELPER_CACHE_ENDPOINT || ''
+  
+  if (!helperCacheEndpoint) {
+    console.warn('[donationFee] No HELPER_CACHE_ENDPOINT configured')
     return null
   }
 
+  // Return cached invoice if still valid and same amount
+  const now = Date.now()
+  if (cachedInvoice && cachedInvoiceExpiry > now && cachedInvoice.amountSatoshis === satoshis) {
+    debugLog('[donationFee] Using cached invoice:', cachedInvoice.invoiceId)
+    return cachedInvoice
+  }
+
   try {
-    // Derive address from merchant identity key
-    let networkPrefix = 'main'
-    try {
-      const raw = String(CONFIG.BSV_NETWORK || 'main').toLowerCase()
-      if (raw === 'test' || raw === 'testnet') {
-        networkPrefix = 'test'
-      }
-    } catch {
-      networkPrefix = 'main'
+    const res = await fetch(`${helperCacheEndpoint}/invoices`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amountSatoshis: satoshis,
+        memo
+      })
+    })
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}))
+      console.error('[donationFee] Failed to create invoice:', res.status, errorData)
+      return null
     }
 
-    const pub = PublicKey.fromString(NULLIFY_MERCHANT_IDENTITY_KEY)
-    const address = pub.toAddress(networkPrefix)
+    const invoice = await res.json()
+    debugLog('[donationFee] Created invoice:', invoice.id, '->', invoice.address)
 
-    const p2pkh = new P2PKH()
-    const lockingScript = p2pkh.lock(address)
-
-    return {
-      satoshis,
-      lockingScript: lockingScript.toHex(),
-      outputDescription: 'Nullify donation',
+    // Cache the invoice
+    cachedInvoice = {
+      address: invoice.address,
+      invoiceId: invoice.id,
+      amountSatoshis: satoshis
     }
+    cachedInvoiceExpiry = now + INVOICE_CACHE_TTL_MS
+
+    return cachedInvoice
   } catch (error) {
-    console.warn('[donationFee] Failed to build donation output', error)
+    console.error('[donationFee] Failed to fetch invoice address:', error)
     return null
   }
 }
 
 /**
- * No-op for backwards compatibility.
- * Previously cleared the invoice cache when using HD-derived addresses from the server.
- * Now donations go directly to merchant wallet, so no cache to clear.
+ * Clear the cached invoice. Call this after a transaction is successfully created
+ * to ensure the next transaction gets a fresh address.
  */
 export function clearInvoiceCache() {
-  // No-op - invoice cache no longer exists
+  cachedInvoice = null
+  cachedInvoiceExpiry = 0
+}
+
+/**
+ * Build a donation/fee output using a fresh HD-derived address from the server.
+ * The server monitors these addresses for incoming payments.
+ * 
+ * @param {number} satoshis - Amount in satoshis (default 50)
+ * @returns {Promise<Object|null>} Output object with lockingScript, or null if not configured
+ */
+export async function buildDonationOutput(satoshis = 50) {
+  if (!Number.isFinite(satoshis) || !Number.isInteger(satoshis) || satoshis <= 0) {
+    return null
+  }
+
+  const invoice = await fetchInvoiceAddress(satoshis)
+  if (!invoice) {
+    return null
+  }
+
+  try {
+    const p2pkh = new P2PKH()
+    const lockingScript = p2pkh.lock(invoice.address)
+
+    return {
+      satoshis,
+      lockingScript: lockingScript.toHex(),
+      outputDescription: 'Nullify fee',
+      invoiceId: invoice.invoiceId, // Include for tracking
+    }
+  } catch (error) {
+    console.warn('[donationFee] Failed to build donation output', error)
+    return null
+  }
 }

@@ -82,7 +82,7 @@ export async function mintThreadControlToken({
   ];
 
   // Donation output at index 0 - server monitors HD-derived address for payment
-  const donationOutput = buildDonationOutput(50);
+  const donationOutput = await buildDonationOutput(50);
   const actionOutputs = donationOutput ? [donationOutput, ...outputs] : outputs;
 
   const response = await client.createAction({
