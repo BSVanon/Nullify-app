@@ -98,6 +98,11 @@ export async function mintDataTokens({
   });
   console.log('[mintDataTokens] createAction response:', response);
 
+  // Log broadcast status for debugging
+  if (response?.sendWithResults) {
+    console.log('[mintDataTokens] sendWithResults:', JSON.stringify(response.sendWithResults));
+  }
+
   const txid = extractTxid(response);
   if (txid && !response.txid) {
     try {

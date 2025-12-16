@@ -91,6 +91,11 @@ export async function mintThreadControlToken({
     options: { randomizeOutputs: false }  // Preserve output order for BRC-29 payment tracking
   });
 
+  // Log broadcast status for debugging
+  if (response?.sendWithResults) {
+    console.log('[mintThreadControlToken] sendWithResults:', JSON.stringify(response.sendWithResults));
+  }
+
   const txid = extractTxid(response);
   // CT is at index 1 when donation output is present (donation is at index 0)
   let vout = donationOutput ? 1 : 0;
