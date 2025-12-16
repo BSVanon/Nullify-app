@@ -5,6 +5,7 @@ import { PeerPayClient } from '@bsv/message-box-client'
 import { NULLIFY_MERCHANT_PAYMAIL, resolvePaymailDestination, submitPaymailTransaction } from './paymail.js'
 import { extractAtomicBeef, atomicBeefToRawTxHex } from './txExtract.js'
 import { sendSatsToIdentityKey, sendSatsToAddress } from './sendUtils.js'
+import { NULLIFY_MERCHANT_IDENTITY_KEY } from './donationFee.js'
 
 // Lightweight MessageBox / PeerPay health publisher for diagnostics.
 // This avoids any coupling between diagnostics and the payment logic
@@ -37,54 +38,9 @@ function publishMessageBoxHealth(partial) {
   }
 }
 
-
-
-
-
-
-
-
+// Send donation to the Nullify merchant wallet using direct broadcast to merchant identity key.
 export async function sendDonation({ amountSats, description }) {
-  const amount = Number(amountSats)
-  if (!Number.isFinite(amount) || !Number.isInteger(amount) || amount <= 0) {
-    throw new Error('Amount must be a positive integer number of sats')
-  }
-
-  console.log('[Donation] Sending via paymail:', {
-    paymail: NULLIFY_MERCHANT_PAYMAIL,
-    amount,
-  })
-
-  // Resolve paymail to get payment destination (BRC-28)
-  const destination = await resolvePaymailDestination(NULLIFY_MERCHANT_PAYMAIL, amount)
-
-  const { client } = await getWallet()
-
-  // Build outputs from paymail destination
-  const outputs = destination.outputs.map(out => ({
-    satoshis: out.satoshis,
-    lockingScript: out.script,
-    outputDescription: 'Nullify donation',
-  }))
-
-  console.log('[Donation] Creating action with outputs:', outputs)
-
-  const result = await client.createAction({
-    description: description || 'Nullify donation',
-    outputs,
-    // Use 'wallet payment' protocol so this is covered by manifest grouped permissions
-    labels: ['wallet payment', 'donation', 'nullify'],
-    options: {
-      randomizeOutputs: false,
-      returnTXIDOnly: false,
-    },
-  })
-
-  console.log('[Donation] Payment sent:', result)
-
-  const txid = extractTxid(result)
-
-  return { response: { status: 'sent' }, txid }
+  return await sendSatsToIdentityKey({ identityKey: NULLIFY_MERCHANT_IDENTITY_KEY, amountSats, description })
 }
 
 // PeerPay-based sats send using Babbage MessageBox + BRC-29 derivation.

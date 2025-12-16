@@ -81,9 +81,9 @@ export async function mintThreadControlToken({
     },
   ];
 
-  // Donation outputs - server monitors paymail-resolved addresses for payment
-  const donationOutputs = await buildDonationOutput(50);
-  const actionOutputs = donationOutputs.length ? [...donationOutputs, ...outputs] : outputs;
+  // Donation output at index 0 - server monitors HD-derived address for payment
+  const donationOutput = buildDonationOutput(50);
+  const actionOutputs = donationOutput ? [donationOutput, ...outputs] : outputs;
 
   const response = await client.createAction({
     description: 'Create a new Nullify Thread',
