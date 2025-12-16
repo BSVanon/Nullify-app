@@ -2,6 +2,9 @@ import { CONFIG } from '../config.js'
 import { getWallet, extractTxid } from './client.js'
 import { PublicKey, P2PKH, Transaction } from '@bsv/sdk'
 import { PeerPayClient } from '@bsv/message-box-client'
+import { NULLIFY_MERCHANT_PAYMAIL, resolvePaymailDestination, submitPaymailTransaction } from './paymail.js'
+import { extractAtomicBeef, atomicBeefToRawTxHex } from './txExtract.js'
+import { sendSatsToIdentityKey, sendSatsToAddress } from './sendUtils.js'
 
 // Lightweight MessageBox / PeerPay health publisher for diagnostics.
 // This avoids any coupling between diagnostics and the payment logic
@@ -35,271 +38,15 @@ function publishMessageBoxHealth(partial) {
 }
 
 
-// Minimal helper to send a simple P2PKH payment to a holder's identity key using wallet.createAction.
-// identityKey is expected to be a compressed secp256k1 public key hex string.
-export async function sendSatsToIdentityKey({ identityKey, amountSats, description }) {
-  if (!identityKey || typeof identityKey !== 'string') {
-    throw new Error('Recipient identity key is required')
-  }
 
-  const amount = Number(amountSats)
-  if (!Number.isFinite(amount) || !Number.isInteger(amount) || amount <= 0) {
-    throw new Error('Amount must be a positive integer number of sats')
-  }
 
-  const { client } = await getWallet()
 
-  let networkPrefix = 'main'
-  try {
-    const raw = String(CONFIG.BSV_NETWORK || 'main').toLowerCase()
-    if (raw === 'test' || raw === 'testnet') {
-      networkPrefix = 'test'
-    }
-  } catch {
-    networkPrefix = 'main'
-  }
 
-  let address
-  try {
-    const pub = PublicKey.fromString(identityKey)
-    address = pub.toAddress(networkPrefix)
-  } catch (error) {
-    console.error('[sendSatsToIdentityKey] Failed to derive address from identity key', error)
-    throw new Error('Unable to derive payment address from identity key')
-  }
 
-  const p2pkh = new P2PKH()
-  const lockingScript = p2pkh.lock(address)
-  const lockingScriptHex = lockingScript.toHex()
 
-  const outputs = [
-    {
-      satoshis: amount,
-      lockingScript: lockingScriptHex,
-      outputDescription: 'Nullify sats support',
-    },
-  ]
 
-  const actionDescription =
-    description || 'Send sats to contact to help cover Nullify messaging fees'
 
-  const response = await client.createAction({
-    description: actionDescription,
-    outputs,
-    labels: ['wallet payment'],
-  })
 
-  const txid = extractTxid(response)
-  return { response, txid }
-}
-
-// Minimal helper to send sats directly to a legacy/base58 address using wallet.createAction.
-// This bypasses identity-key derivation and is intended for low-level testing.
-export async function sendSatsToAddress({ address, amountSats, description }) {
-  if (!address || typeof address !== 'string') {
-    throw new Error('Recipient address is required')
-  }
-
-  const amount = Number(amountSats)
-  if (!Number.isFinite(amount) || !Number.isInteger(amount) || amount <= 0) {
-    throw new Error('Amount must be a positive integer number of sats')
-  }
-
-  const { client } = await getWallet()
-
-  let lockingScriptHex
-  try {
-    const p2pkh = new P2PKH()
-    const lockingScript = p2pkh.lock(address)
-    lockingScriptHex = lockingScript.toHex()
-  } catch (error) {
-    console.error('[sendSatsToAddress] Failed to build locking script for address', address, error)
-    throw new Error('Unable to derive payment script from address')
-  }
-
-  const outputs = [
-    {
-      satoshis: amount,
-      lockingScript: lockingScriptHex,
-      outputDescription: 'Nullify sats support (address)',
-    },
-  ]
-
-  const actionDescription = description || 'Send sats (address) via Nullify debug helper'
-
-  const response = await client.createAction({
-    description: actionDescription,
-    outputs,
-    // Use 'wallet payment' protocol so this is covered by manifest grouped permissions
-    labels: ['wallet payment'],
-  })
-
-  const txid = extractTxid(response)
-  return { response, txid }
-}
-
-// Nullify merchant paymail address for donations.
-// Paymail provides a standard way to receive payments without requiring
-// the recipient to run any polling service - the payment goes directly on-chain.
-export const NULLIFY_MERCHANT_PAYMAIL = 'nullify@paymail.us'
-
-function getHelperCacheBaseUrl() {
-  const base = (CONFIG.HELPER_CACHE_ENDPOINT || '').trim()
-  if (!base) return ''
-  return base.endsWith('/') ? base.slice(0, -1) : base
-}
-
-// Resolve a paymail address to get a P2P payment destination (BRC-28).
-// Uses helper-cache proxy to avoid CORS issues with paymail providers.
-// Returns { outputs: [{ script, satoshis }], reference } or throws on failure.
-async function resolvePaymailDestination(paymail, satoshis) {
-  if (!paymail || !paymail.includes('@')) {
-    throw new Error(`Invalid paymail address: ${paymail}`)
-  }
-
-  console.log('[Paymail] Resolving via proxy:', { paymail, satoshis })
-
-  // Use helper-cache proxy to avoid CORS
-  const base = getHelperCacheBaseUrl()
-  if (!base) throw new Error('Helper cache endpoint not configured')
-  const proxyUrl = `${base}/paymail/resolve`
-  const res = await fetch(proxyUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ paymail, satoshis }),
-  })
-
-  if (!res.ok) {
-    const errData = await res.json().catch(() => ({}))
-    throw new Error(errData.error || `Failed to resolve paymail: ${res.status}`)
-  }
-
-  const destination = await res.json()
-  console.log('[Paymail] Payment destination:', destination)
-
-  // destination should have: { outputs: [{ script, satoshis }], reference }
-  if (!destination.outputs || !Array.isArray(destination.outputs) || destination.outputs.length === 0) {
-    throw new Error('Paymail provider returned invalid payment destination')
-  }
-
-  return destination
-}
-
-async function submitPaymailTransaction({ paymail, reference, hex, metadata }) {
-  console.log('[Paymail] Submitting transaction via proxy:', {
-    paymail,
-    reference,
-    hexPreview: typeof hex === 'string' ? `${hex.slice(0, 16)}...` : null,
-  })
-
-  const base = getHelperCacheBaseUrl()
-  if (!base) throw new Error('Helper cache endpoint not configured')
-  const proxyUrl = `${base}/paymail/submit`
-  const res = await fetch(proxyUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ paymail, reference, hex, metadata }),
-  })
-
-  if (!res.ok) {
-    const errData = await res.json().catch(() => ({}))
-    throw new Error(errData.error || `Failed to submit paymail transaction: ${res.status}`)
-  }
-
-  const response = await res.json().catch(() => ({}))
-  console.log('[Paymail] Submit response:', response)
-  return response
-}
-
-function base64ToBytes(value) {
-  if (typeof value !== 'string') return null
-
-  try {
-    if (typeof atob === 'function') {
-      const bin = atob(value)
-      const bytes = new Array(bin.length)
-      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
-      return bytes
-    }
-  } catch {
-    // fall through
-  }
-
-  try {
-    if (
-      typeof globalThis !== 'undefined' &&
-      globalThis.Buffer &&
-      typeof globalThis.Buffer.from === 'function'
-    ) {
-      return Array.from(globalThis.Buffer.from(value, 'base64'))
-    }
-  } catch {
-    // fall through
-  }
-
-  return null
-}
-
-function hexToBytes(value) {
-  if (typeof value !== 'string') return null
-  const clean = value.trim()
-  if (!clean) return null
-  if (!/^[0-9a-fA-F]+$/.test(clean) || clean.length % 2 !== 0) return null
-
-  const bytes = new Array(clean.length / 2)
-  for (let i = 0; i < clean.length; i += 2) {
-    bytes[i / 2] = parseInt(clean.slice(i, i + 2), 16)
-  }
-  return bytes
-}
-
-function extractAtomicBeef(res) {
-  if (!res || typeof res !== 'object') return null
-  return (
-    res.tx ||
-    res?.signableTransaction?.tx ||
-    res?.result?.tx ||
-    res?.result?.signableTransaction?.tx ||
-    null
-  )
-}
-
-function atomicBeefToRawTxHex(atomicBeef) {
-  if (!atomicBeef) return null
-
-  let bytes = null
-  if (atomicBeef instanceof Uint8Array) {
-    bytes = Array.from(atomicBeef)
-  } else if (Array.isArray(atomicBeef)) {
-    bytes = atomicBeef
-  } else if (typeof atomicBeef === 'string') {
-    bytes = hexToBytes(atomicBeef) || base64ToBytes(atomicBeef)
-  } else if (typeof atomicBeef === 'object') {
-    const nested = atomicBeef?.data || atomicBeef?.raw || atomicBeef?.beef || atomicBeef?.tx || null
-    if (nested instanceof Uint8Array) {
-      bytes = Array.from(nested)
-    } else if (Array.isArray(nested)) {
-      bytes = nested
-    } else if (typeof nested === 'string') {
-      bytes = hexToBytes(nested) || base64ToBytes(nested)
-    }
-  }
-
-  if (!bytes) return null
-
-  try {
-    const tx = Transaction.fromBEEF(bytes)
-    return tx.toHex()
-  } catch (err) {
-    try {
-      const tx = Transaction.fromAtomicBEEF(bytes)
-      return tx.toHex()
-    } catch {
-      const tx = Transaction.fromBinary(bytes)
-      return tx.toHex()
-    }
-  }
-}
 
 // Send donation to the Nullify merchant wallet using Paymail.
 // This sends a direct on-chain payment that the merchant wallet will discover
@@ -337,6 +84,7 @@ export async function sendDonation({ amountSats, description }) {
     options: {
       randomizeOutputs: false,
       returnTXIDOnly: false,
+      noSend: true,
     },
   })
 
