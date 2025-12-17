@@ -2,10 +2,6 @@ import { P2PKH } from '@bsv/sdk'
 
 import { CONFIG } from '../config.js'
 
-// Static fallback address - derived from merchant HD key at m/0/0
-// Used if HD-invoice system is unavailable
-const FALLBACK_FEE_ADDRESS = '1MXKjohFDVj18pQqw8bdm9wiHuaDxHC68Y'
-
 // Cache for the current invoice to avoid creating multiple invoices per transaction
 let cachedInvoice = null
 let cachedInvoiceExpiry = 0
@@ -23,7 +19,7 @@ async function fetchInvoiceAddress(satoshis, memo = 'Nullify fee') {
   const helperCacheEndpoint = CONFIG.HELPER_CACHE_ENDPOINT || ''
   
   if (!helperCacheEndpoint) {
-    console.warn('[donationFee] No HELPER_CACHE_ENDPOINT configured, using fallback address')
+    console.warn('[donationFee] No HELPER_CACHE_ENDPOINT configured')
     return null
   }
 
@@ -78,35 +74,33 @@ export function clearInvoiceCache() {
 }
 
 /**
- * Build a donation/fee output.
- * Primary: Uses HD-derived address from helper-cache server (better privacy, tracked invoices)
- * Fallback: Uses static merchant address if server unavailable
+ * Build a donation/fee output using HD-derived address from helper-cache server.
+ * Returns null if the invoice system is unavailable (no fallback for privacy).
  * 
  * @param {number} satoshis - Amount in satoshis (default 50)
- * @returns {Promise<Object|null>} Output object with lockingScript, or null on error
+ * @returns {Promise<Object|null>} Output object with lockingScript, or null if unavailable
  */
 export async function buildDonationOutput(satoshis = 50) {
   if (!Number.isFinite(satoshis) || !Number.isInteger(satoshis) || satoshis <= 0) {
     return null
   }
 
-  // Try HD-invoice system first
+  // Get HD-derived address from invoice system (no static fallback for privacy)
   const invoice = await fetchInvoiceAddress(satoshis)
-  const address = invoice?.address || FALLBACK_FEE_ADDRESS
-  
-  if (!invoice) {
-    console.log('[donationFee] Using fallback static address:', FALLBACK_FEE_ADDRESS)
+  if (!invoice?.address) {
+    console.warn('[donationFee] Invoice system unavailable, skipping fee output')
+    return null
   }
 
   try {
     const p2pkh = new P2PKH()
-    const lockingScript = p2pkh.lock(address)
+    const lockingScript = p2pkh.lock(invoice.address)
 
     return {
       satoshis,
       lockingScript: lockingScript.toHex(),
       outputDescription: 'Nullify fee',
-      invoiceId: invoice?.invoiceId || null,
+      invoiceId: invoice.invoiceId,
     }
   } catch (error) {
     console.warn('[donationFee] Failed to build donation output', error)
