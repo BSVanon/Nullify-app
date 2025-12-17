@@ -163,7 +163,7 @@ export async function startPeerPayAutoAccept({ onPaymentAccepted } = {}) {
     const handleAcceptance = async (payment) => {
       if (!payment) return
       try {
-        console.log('[PeerPay] Auto-accepting payment without user prompt', payment)
+        console.log('[PeerPay] Auto-accepting payment', { messageId: payment.messageId })
         
         // Call internalizeAction directly with seekPermission: false to skip user prompt
         const STANDARD_PAYMENT_OUTPUT_INDEX = 0
@@ -183,11 +183,10 @@ export async function startPeerPayAutoAccept({ onPaymentAccepted } = {}) {
           seekPermission: false // Auto-accept without user prompt
         }, originator)
 
-        console.log('[PeerPay] Payment internalized successfully', paymentResult)
+        console.log('[PeerPay] Payment internalized successfully')
         
         // Acknowledge the message so it's marked as processed
         await peerPay.acknowledgeMessage({ messageIds: [payment.messageId] })
-        console.log('[PeerPay] Payment acknowledged')
 
         if (typeof onPaymentAccepted === 'function') {
           const amount =
@@ -198,37 +197,30 @@ export async function startPeerPayAutoAccept({ onPaymentAccepted } = {}) {
           onPaymentAccepted({ payment, result: paymentResult, amount })
         }
       } catch (error) {
-        console.error('[PeerPay] Failed to accept incoming payment', error)
+        // Acknowledge failed messages too - they're likely stale/invalid and will never succeed
+        // This prevents endless retry loops for old payments that can't be internalized
+        console.warn('[PeerPay] Failed to internalize payment, acknowledging to prevent retry:', payment.messageId)
+        try {
+          await peerPay.acknowledgeMessage({ messageIds: [payment.messageId] })
+        } catch (ackError) {
+          console.warn('[PeerPay] Failed to acknowledge stale message:', ackError.message)
+        }
       }
     }
 
     // First, sweep any existing pending payments from MessageBox and auto-accept them.
     try {
-      console.log('[PeerPay] Checking for existing incoming payments to auto-accept...')
       const pending = await peerPay.listIncomingPayments()
-
       publishMessageBoxHealth({ status: 'ok' })
 
       if (Array.isArray(pending) && pending.length > 0) {
-        console.log('[PeerPay] Found pending PeerPay payments',
-          pending.map((p) => ({
-            messageId: p.messageId,
-            amount:
-              p.token && typeof p.token.amount === 'number'
-                ? p.token.amount
-                : null,
-          })),
-        )
-
+        console.log('[PeerPay] Processing', pending.length, 'pending payments')
         for (const payment of pending) {
-          console.log('[PeerPay] Auto-accepting existing PeerPay payment', payment)
           await handleAcceptance(payment)
         }
-      } else {
-        console.log('[PeerPay] No existing PeerPay payments found')
       }
     } catch (error) {
-      console.error('[PeerPay] Failed to list/accept existing PeerPay payments', error)
+      console.warn('[PeerPay] Failed to list incoming payments:', error.message)
       publishMessageBoxHealth({ status: 'degraded', lastError: String(error) })
     }
 
@@ -237,36 +229,32 @@ export async function startPeerPayAutoAccept({ onPaymentAccepted } = {}) {
       // Fire-and-forget; we do not await this promise so it does not block the UI.
       void peerPay.listenForLivePayments({
         onPayment: async (payment) => {
-          console.log('[PeerPay] Incoming live PeerPay payment', payment)
+          console.log('[PeerPay] Incoming live payment:', payment.messageId)
           await handleAcceptance(payment)
         },
       })
-
       console.log('[PeerPay] Auto-accept listener active')
     } catch (error) {
-      console.error('[PeerPay] Failed to start live PeerPay listener', error)
+      console.warn('[PeerPay] Failed to start live listener:', error.message)
     }
 
-    // Poll for incoming payments every 10 seconds as a fallback for WebSocket delivery issues
+    // Poll for incoming payments every 30 seconds as a fallback for WebSocket delivery issues
     const pollInterval = setInterval(async () => {
       try {
-        console.log('[PeerPay] Polling for incoming payments...')
         const pending = await peerPay.listIncomingPayments()
-
         publishMessageBoxHealth({ status: 'ok' })
 
         if (Array.isArray(pending) && pending.length > 0) {
-          console.log('[PeerPay] Found pending payments during poll', pending.length)
+          console.log('[PeerPay] Poll found', pending.length, 'pending payments')
           for (const payment of pending) {
-            console.log('[PeerPay] Auto-accepting polled payment', payment)
             await handleAcceptance(payment)
           }
         }
       } catch (error) {
-        console.error('[PeerPay] Failed to poll for incoming payments', error)
+        // Silent fail on poll - don't spam logs
         publishMessageBoxHealth({ status: 'degraded', lastError: String(error) })
       }
-    }, 10000) // Poll every 10 seconds
+    }, 30000) // Poll every 30 seconds (reduced frequency)
 
     // Store the interval ID so it can be cleared later if needed
     if (typeof window !== 'undefined') {
