@@ -4,7 +4,6 @@ import { mapLockingScriptsToIndexes } from '@/lib/wallet/transactionOutputs.js'
 import { wrapCTForPushDrop, createCTPayload } from '@/lib/token/ct.js'
 import { burnControlToken } from '@/lib/wallet/actions.js'
 import { buildDonationOutput, clearInvoiceCache } from '@/lib/wallet/donationFee.js'
-import { ensureBroadcast } from '@/lib/wallet/broadcast.js'
 
 /**
  * Mint a Control Token (CT) for a messaging thread (PATENT-CRITICAL)
@@ -92,27 +91,13 @@ export async function mintThreadControlToken({
     options: { randomizeOutputs: false }  // Preserve output order for BRC-29 payment tracking
   });
 
-  // Log broadcast status for debugging
-  if (response?.sendWithResults) {
-    console.log('[mintThreadControlToken] sendWithResults:', JSON.stringify(response.sendWithResults));
-  }
-
   const txid = extractTxid(response);
 
-  // Manual broadcast fallback if wallet broadcast is stuck in "sending" state
+  // Log broadcast status - "sending" means wallet is broadcasting asynchronously (normal)
   const sendStatus = response?.sendWithResults?.[0]?.status;
-  if (txid && sendStatus === 'sending') {
-    console.log('[mintThreadControlToken] Wallet broadcast pending, attempting manual broadcast...');
-    try {
-      const broadcastResult = await ensureBroadcast(response, txid);
-      if (broadcastResult.broadcasted) {
-        console.log('[mintThreadControlToken] Manual broadcast succeeded via', broadcastResult.endpoint || 'wallet');
-      } else {
-        console.warn('[mintThreadControlToken] Manual broadcast failed:', broadcastResult.error);
-      }
-    } catch (err) {
-      console.warn('[mintThreadControlToken] Manual broadcast error:', err);
-    }
+  console.log(`[mintThreadControlToken] txid=${txid}, status=${sendStatus || 'unknown'}`);
+  if (sendStatus === 'failed') {
+    console.warn('[mintThreadControlToken] Wallet broadcast failed');
   }
   // CT is at index 1 when donation output is present (donation is at index 0)
   let vout = donationOutput ? 1 : 0;
